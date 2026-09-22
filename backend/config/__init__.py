@@ -1,0 +1,1 @@
+# Jakeala Naturals Django project

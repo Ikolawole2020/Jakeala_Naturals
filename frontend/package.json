@@ -1,0 +1,18 @@
+{
+  "name": "jakeala-naturals",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\"",
+    "dev": "npm run clean && next dev",
+    "build": "npm run clean && next build",
+    "dev:3001": "npm run clean && next dev -p 3001",
+    "start": "next start",
+    "start:3001": "next start -p 3001"
+  },
+  "dependencies": {
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
