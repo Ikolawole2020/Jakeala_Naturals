@@ -116,7 +116,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # In production set CORS_ALLOWED_ORIGINS to the real front-end origins, e.g.
 #   CORS_ALLOWED_ORIGINS=https://jakeala.com,https://www.jakeala.com
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
-CORS_ALLOW_ALL_ORIGINS = DEBUG and not CORS_ALLOWED_ORIGINS
+# Regexes for origins too dynamic to list one by one - Vercel gives every preview
+# deployment its own hostname, so a whitelist alone would block those. Example:
+#   CORS_ALLOWED_ORIGIN_REGEXES=^https://jakeala-naturals[a-z0-9-]*\.vercel\.app$
+CORS_ALLOWED_ORIGIN_REGEXES = env_list("CORS_ALLOWED_ORIGIN_REGEXES")
+CORS_ALLOW_ALL_ORIGINS = DEBUG and not (CORS_ALLOWED_ORIGINS or CORS_ALLOWED_ORIGIN_REGEXES)
 CORS_ALLOW_CREDENTIALS = True
 
 # Required by Django 4+ for POSTs (e.g. the Django admin login) behind a proxy.
