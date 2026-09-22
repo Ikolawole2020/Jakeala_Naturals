@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArticle } from "@/lib/api";
+import { SITE_NAME, SITE_URL, siteUrl } from "@/lib/site";
 
 const FALLBACK_ARTICLES = {
   "reading-inci-lists": {
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description: desc,
-    alternates: { canonical: `https://jakeala.com/wellness/${params.slug}` },
+    alternates: { canonical: siteUrl(`/wellness/${params.slug}`) },
   };
 }
 
@@ -56,8 +57,8 @@ export default async function ArticlePage({ params }) {
     headline: a.title,
     description: a.excerpt,
     articleSection: a.category_label,
-    author: { "@type": "Organization", name: "Jakeala Naturals" },
-    publisher: { "@type": "Organization", name: "Jakeala Naturals", url: "https://jakeala.com" },
+    author: { "@type": "Organization", name: SITE_NAME },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
   };
 
   return (

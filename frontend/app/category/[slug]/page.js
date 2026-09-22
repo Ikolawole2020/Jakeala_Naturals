@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { FALLBACK_CATEGORIES, FALLBACK_PRODUCTS, getCategories, getProducts, results } from "@/lib/api";
+import { siteUrl } from "@/lib/site";
 
 export async function generateMetadata({ params }) {
   const c = FALLBACK_CATEGORIES.find((x) => x.slug === params.slug);
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }) {
   return {
     title: c.name,
     description: c.tagline,
-    alternates: { canonical: `https://jakeala.com/category/${params.slug}` },
+    alternates: { canonical: siteUrl(`/category/${params.slug}`) },
   };
 }
 

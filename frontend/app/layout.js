@@ -2,6 +2,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata = {
   title: {
@@ -10,7 +11,7 @@ export const metadata = {
   },
   description:
     "Jakeala Naturals brings handcrafted herbal care together with modern natural wellness — skin and body, women's wellness, essential oils and eye-health supplements.",
-  metadataBase: new URL("https://jakeala.com"),
+  metadataBase: new URL(SITE_URL),
 };
 
 export default function RootLayout({ children }) {

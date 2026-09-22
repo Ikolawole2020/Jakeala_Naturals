@@ -5,6 +5,10 @@ Production-ready natural wellness e-commerce platform.
 **Stack:** Django 5 REST API + Next.js 14 (App Router)  
 **Brand:** Warm, botanical, feminine, inclusive, modern and science-aware.
 
+> **Going live?** See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the full
+> PythonAnywhere (backend) + Vercel (frontend) walkthrough, environment
+> variables, and a troubleshooting table.
+
 ## Brand
 
 - Primary green `#52805A`

@@ -4,6 +4,7 @@ import ProductGallery from "@/components/ProductGallery";
 import AddToCart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
 import { FALLBACK_PRODUCTS, getProduct, getRelated, naira, results } from "@/lib/api";
+import { siteUrl } from "@/lib/site";
 
 const FALLBACK_DETAIL = {
   "shea-hibiscus-body-butter": {
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }) {
   return {
     title: p ? p.name : "Product",
     description: p ? p.short_benefit : undefined,
-    alternates: { canonical: `https://jakeala.com/product/${params.slug}` },
+    alternates: { canonical: siteUrl(`/product/${params.slug}`) },
     openGraph: p
       ? { title: p.name, description: p.short_benefit, images: [p.image] }
       : undefined,

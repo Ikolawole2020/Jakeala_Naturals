@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { SITE_EMAIL, siteUrl } from "@/lib/site";
 
 const DOCS = {
   privacy: {
@@ -57,7 +58,7 @@ export async function generateMetadata({ params }) {
   return {
     title: doc ? `${doc.title} · Jakeala Naturals` : "Legal",
     description: doc ? doc.intro : undefined,
-    alternates: { canonical: `https://jakeala.com/legal/${params.slug}` },
+    alternates: { canonical: siteUrl(`/legal/${params.slug}`) },
   };
 }
 
@@ -70,7 +71,7 @@ export default function LegalPage({ params }) {
       <p className="kicker">Legal</p>
       <h1 className="serif" style={{ fontSize: 42, margin: "8px 0 14px" }}>{doc.title}</h1>
       <p className="muted">{doc.intro}</p>
-      <p className="muted" style={{ marginTop: 8 }}>Last updated: January 2026 · info@jakeala.com</p>
+      <p className="muted" style={{ marginTop: 8 }}>Last updated: January 2026 · {SITE_EMAIL}</p>
       {doc.sections.map(([heading, points]) => (
         <section key={heading}>
           <h2>{heading}</h2>

@@ -79,27 +79,27 @@ export const adminMe = () => adminApi("/me/");
 export const adminStats = () => adminApi("/stats/");
 
 // Products
-export const adminProducts = (qs = "") => adminApi(`/products/${qs}`);
+export const adminProducts = (qs = "?page_size=200") => adminApi(`/products/${qs}`);
 export const adminCreateProduct = (d) => adminApi("/products/", { method: "POST", body: JSON.stringify(d) });
 export const adminUpdateProduct = (id, d) => adminApi(`/products/${id}/`, { method: "PATCH", body: JSON.stringify(d) });
 export const adminDeleteProduct = (id) => adminApi(`/products/${id}/`, { method: "DELETE" });
 
 // Categories
-export const adminCategories = (qs = "") => adminApi(`/categories/${qs}`);
+export const adminCategories = (qs = "?page_size=200") => adminApi(`/categories/${qs}`);
 export const adminCreateCategory = (d) => adminApi("/categories/", { method: "POST", body: JSON.stringify(d) });
 export const adminUpdateCategory = (id, d) => adminApi(`/categories/${id}/`, { method: "PATCH", body: JSON.stringify(d) });
 export const adminDeleteCategory = (id) => adminApi(`/categories/${id}/`, { method: "DELETE" });
 
 // Orders
-export const adminOrders = (qs = "") => adminApi(`/orders/${qs}`);
+export const adminOrders = (qs = "?page_size=200") => adminApi(`/orders/${qs}`);
 export const adminUpdateOrder = (id, d) => adminApi(`/orders/${id}/`, { method: "PATCH", body: JSON.stringify(d) });
 
 // Reviews
-export const adminReviews = (qs = "") => adminApi(`/reviews/${qs}`);
+export const adminReviews = (qs = "?page_size=200") => adminApi(`/reviews/${qs}`);
 export const adminDeleteReview = (id) => adminApi(`/reviews/${id}/`, { method: "DELETE" });
 
 // Articles
-export const adminArticles = (qs = "") => adminApi(`/articles/${qs}`);
+export const adminArticles = (qs = "?page_size=200") => adminApi(`/articles/${qs}`);
 export const adminCreateArticle = (d) => adminApi("/articles/", { method: "POST", body: JSON.stringify(d) });
 export const adminUpdateArticle = (id, d) => adminApi(`/articles/${id}/`, { method: "PATCH", body: JSON.stringify(d) });
 export const adminDeleteArticle = (id) => adminApi(`/articles/${id}/`, { method: "DELETE" });
