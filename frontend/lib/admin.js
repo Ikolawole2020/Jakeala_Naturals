@@ -31,6 +31,32 @@ export function adminApiBase() {
   return `${ADMIN}/admin`;
 }
 
+// True when this page is served from a real domain but the API URL is still the
+// localhost default - i.e. NEXT_PUBLIC_API_URL was not set at build time.
+// Vercel bakes NEXT_PUBLIC_* values in during `next build`, so a missing var
+// silently ships a site that calls the visitor's own machine.
+export function apiUrlMissingForHost() {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  const pageIsLocal = host === "localhost" || host === "127.0.0.1" || host === "";
+  const apiIsLocal = /localhost|127\.0\.0\.1/.test(ADMIN);
+  return !pageIsLocal && apiIsLocal;
+}
+
+export class AdminMisconfigured extends Error {
+  constructor() {
+    super(
+      "This deployment is not configured with a backend URL, so it is still " +
+        "calling localhost (your own computer).\n\n" +
+        "Fix it in Vercel:  Project -> Settings -> Environment Variables, add\n" +
+        "  NEXT_PUBLIC_API_URL = https://jakealanaturals.pythonanywhere.com/api\n" +
+        "then redeploy - NEXT_PUBLIC_* values are baked in at build time, so " +
+        "adding the variable alone is not enough."
+    );
+    this.name = "AdminMisconfigured";
+  }
+}
+
 export class AdminOffline extends Error {
   constructor(url) {
     super(
@@ -55,6 +81,8 @@ export async function adminApi(path, options = {}) {
     });
   } catch {
     // fetch only rejects on a network/CORS failure, never on a bad password.
+    // Distinguish "this build has no API URL" from "the API is unreachable".
+    if (apiUrlMissingForHost()) throw new AdminMisconfigured();
     throw new AdminOffline(ADMIN);
   }
   if (res.status === 401 || res.status === 403) throw new AdminUnauthorized();

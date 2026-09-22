@@ -1,8 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AdminOffline, adminApiBase, adminLogin, setAdminToken } from "@/lib/admin";
+import {
+  AdminMisconfigured,
+  AdminOffline,
+  adminApiBase,
+  adminLogin,
+  apiUrlMissingForHost,
+  setAdminToken,
+} from "@/lib/admin";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -10,6 +17,12 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Checked after mount: reading window during render would desync SSR/client.
+  const [misconfigured, setMisconfigured] = useState(false);
+
+  useEffect(() => {
+    setMisconfigured(apiUrlMissingForHost());
+  }, []);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -21,9 +34,11 @@ export default function AdminLogin() {
       router.push("/admin");
     } catch (err) {
       setError(
-        err instanceof AdminOffline
-          ? `Cannot connect to the backend.\n\n${err.message}`
-          : err.message || "Login failed."
+        err instanceof AdminMisconfigured
+          ? err.message
+          : err instanceof AdminOffline
+            ? `Cannot connect to the backend.\n\n${err.message}`
+            : err.message || "Login failed."
       );
     } finally {
       setBusy(false);
@@ -74,8 +89,17 @@ export default function AdminLogin() {
       <p className="muted" style={{ marginTop: 18, fontSize: 13 }}>
         API endpoint: <code>{adminApiBase()}</code>
         <br />
-        Backend down? Run <code>python manage.py runserver 8000</code> in the
-        <code> backend</code> folder.
+        {misconfigured ? (
+          <>
+            This deployment has no <code>NEXT_PUBLIC_API_URL</code> set. Add it in
+            Vercel and redeploy.
+          </>
+        ) : (
+          <>
+            Backend down? Run <code>python manage.py runserver 8000</code> in the
+            <code> backend</code> folder.
+          </>
+        )}
       </p>
     </div>
   );
