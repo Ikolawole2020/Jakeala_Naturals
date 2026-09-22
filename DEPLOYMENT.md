@@ -42,32 +42,43 @@ GitHub (Ikolawole2020/Jakeala_Naturals)
 
 ### 1.3 Clone the repository
 
-If the GitHub repo is **public**:
+Git cannot clone a single subfolder, but **sparse-checkout** downloads only
+`backend/` (plus the root-level docs), which is all this server needs:
+
+```bash
+cd ~
+git clone --filter=blob:none --sparse https://github.com/Ikolawole2020/Jakeala_Naturals.git
+cd Jakeala_Naturals
+git sparse-checkout set backend
+```
+
+Result: `~/Jakeala_Naturals/backend/` exists and `frontend/` does not. Future
+`git pull`s respect the sparse setting, so updates stay backend-only.
+
+If your git version is too old for `--sparse`, fall back to a normal clone — the
+repo is only a few thousand lines of text, and you can delete the unwanted folder:
 
 ```bash
 cd ~
 git clone https://github.com/Ikolawole2020/Jakeala_Naturals.git
-```
-
-If the repo stays **private**, clone with a GitHub Personal Access Token
-(GitHub → *Settings → Developer settings → Personal access tokens → Fine-grained
-tokens*, give it **read-only access to Contents** on this repository):
-
-```bash
-cd ~
-git clone https://YOUR_GITHUB_USERNAME:YOUR_TOKEN@github.com/Ikolawole2020/Jakeala_Naturals.git
-```
-
-Then store the token in the remote so future `git pull`s work without prompting:
-
-```bash
-cd ~/Jakeala_Naturals
-git remote set-url origin https://YOUR_GITHUB_USERNAME:YOUR_TOKEN@github.com/Ikolawole2020/Jakeala_Naturals.git
+rm -rf ~/Jakeala_Naturals/frontend     # optional: it is unused on this server
 ```
 
 > `github.com` is on PythonAnywhere's outbound whitelist for free accounts, so the
-> clone works without a paid plan. The token is saved in `.git/config` inside your
-> PythonAnywhere account — keep that account secure.
+> clone works without a paid plan.
+
+> **If you make the repo private later**, clone with a GitHub Personal Access
+> Token instead (GitHub → *Settings → Developer settings → Personal access tokens*
+> → give it read-only **Contents** access to this repo), and store it so pulls do
+> not prompt:
+>
+> ```bash
+> git clone https://YOUR_GITHUB_USERNAME:YOUR_TOKEN@github.com/Ikolawole2020/Jakeala_Naturals.git
+> cd ~/Jakeala_Naturals
+> git remote set-url origin https://YOUR_GITHUB_USERNAME:YOUR_TOKEN@github.com/Ikolawole2020/Jakeala_Naturals.git
+> ```
+>
+> The token is then stored in `.git/config` — keep that account secure.
 
 ### 1.4 Create the virtualenv and install dependencies
 
@@ -141,13 +152,22 @@ PythonAnywhere **ignores** `backend/config/wsgi.py`. You must edit *their* file.
 1. In the **Web** tab, click the **WSGI configuration file** link — it opens a path
    like `/var/www/YOURNAME_pythonanywhere_com_wsgi.py`.
 2. Select everything in it and delete it.
-3. Open `backend/pythonanywhere_wsgi.py` in your own editor, copy its contents,
-   paste them in, and replace every `<USER>` with your username.
+3. Fill it with the contents of `backend/pythonanywhere_wsgi.py`. **There is
+   nothing to edit** — the file resolves your home directory at runtime with
+   `os.path.expanduser("~")`, so your username never has to be typed in.
 4. Save.
+
+The easiest way to get the text exactly right is to print it in a Bash console and
+copy from there, so nothing is mistyped:
+
+```bash
+cat ~/Jakeala_Naturals/backend/pythonanywhere_wsgi.py
+```
 
 The file only needs three things: your project path on `sys.path`, the
 `DJANGO_SETTINGS_MODULE` variable, and the `application` object. All secrets are
 read from `backend/.env`, so your console and the web worker stay in sync.
+
 
 ### 1.9 Map the static files
 
@@ -176,7 +196,7 @@ Click the big green **Reload** button, then check these URLs in your browser:
 
 If a page returns an error or `DisallowedHost`, open the **Error log** link on the
 Web tab — it shows the exact Python traceback. Most first-deploy problems are a
-typo in `ALLOWED_HOSTS` or a missing `<USER>` replacement in the WSGI file.
+typo in `ALLOWED_HOSTS` or a wrong `PROJECT_DIR` in the WSGI file.
 
 **You now have a live API.** Note the base URL, `https://YOURNAME.pythonanywhere.com/api`
 — both Vercel and the admin dashboard need it.
