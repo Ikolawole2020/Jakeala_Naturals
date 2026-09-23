@@ -3,7 +3,11 @@ venv/
 __pycache__/
 *.py[cod]
 db.sqlite3
-media/
+# User uploads are runtime data, but the catalogue product shots ARE source:
+# they are served from /media/ on PythonAnywhere, so they must deploy.
+media/*
+!media/products/
+!media/products/*.jpg
 staticfiles/
 # Throttle counters live here; they are runtime state, not source.
 cache/
