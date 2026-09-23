@@ -5,5 +5,7 @@ __pycache__/
 db.sqlite3
 media/
 staticfiles/
+# Throttle counters live here; they are runtime state, not source.
+cache/
 *.log
 .env

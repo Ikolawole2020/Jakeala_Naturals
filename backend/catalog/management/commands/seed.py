@@ -1,24 +1,387 @@
-from django.core.management.base import BaseCommand
+"""Seed the Jakeala Naturals catalogue, wellness journal and staff login.
+
+The catalogue seeded here is the **real Jakeala Naturals range**, taken from the
+brand's own product documentation:
+
+    Tea range            Cycle Reset, Lenu Harmony, Teen Comfort Flow, Ease Flow
+    Feminine care range  Yoni Cleansing Oil, Boobs Massage Butter
+
+Images live in ``backend/media/products/`` and are referenced by the relative
+path ``/media/products/<file>``. A relative path is used on purpose: one row then
+works on localhost, on the PythonAnywhere domain and on jakeala.com without
+editing the database when the domain changes. The front end resolves it against
+the API origin (see ``imageUrl()`` in frontend/lib/api.js).
+
+Run
+---
+    python manage.py seed                    # create/update; never deletes
+    python manage.py seed --reset-catalogue  # replace an old placeholder catalogue
+    python manage.py seed --reset-admin-password
+
+**Prices are placeholders.** They are marked below, and the command prints a
+reminder. Set the real prices in the admin dashboard (Products -> Edit) before you
+take orders. Names, descriptions, ingredients, directions, sizes and warnings are
+taken from the brand documentation as written.
+"""
+
+import os
+
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+from django.db import transaction
+
 from catalog.models import Category, Product, Review
+from commerce.models import CartItem
 from content.models import Article
 
+# --------------------------------------------------------------------------- #
+#  Staff login                                                                #
+# --------------------------------------------------------------------------- #
+ADMIN_USERNAME = os.environ.get("DJANGO_ADMIN_USERNAME", "admin")
+ADMIN_EMAIL = os.environ.get("DJANGO_ADMIN_EMAIL", "info@jakeala.com")
 
-IMG = {
-    "women": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=900&q=80",
-    "oils": "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=900&q=80",
-    "eye": "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=900&q=80",
-    "skin": "https://images.unsplash.com/photo-1570172616994-4597c4d6433d?w=900&q=80",
-    "cream": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=900&q=80",
-    "soap": "https://images.unsplash.com/photo-1617897903246-719242758050?w=900&q=80",
-    "serum": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=900&q=80",
-    "tea": "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=900&q=80",
-}
+# This repository is public, so the fallback below is a known value. Keep it for
+# local development, but set DJANGO_ADMIN_PASSWORD in backend/.env in production
+# (or change it with `python manage.py changepassword admin`).
+DEFAULT_ADMIN_PASSWORD = "jakeala2026"
+ADMIN_PASSWORD = os.environ.get("DJANGO_ADMIN_PASSWORD") or DEFAULT_ADMIN_PASSWORD
+ADMIN_PASSWORD_IS_DEFAULT = ADMIN_PASSWORD == DEFAULT_ADMIN_PASSWORD
 
+# Prefix for the catalogue images served by the backend.
+IMAGES = "/media/products"
 
-ADMIN_USERNAME = "admin"
-ADMIN_EMAIL = "info@jakeala.com"
-ADMIN_PASSWORD = "jakeala2026"
+# --------------------------------------------------------------------------- #
+#  Collections                                                                #
+# --------------------------------------------------------------------------- #
+CATEGORIES = [
+    (
+        "Women's Wellness",
+        "womens-wellness",
+        "Everyday rituals for feminine balance",
+        "Herbal teas and botanical blends for cycle comfort, heavy-flow support and everyday "
+        "women's wellness.",
+        f"{IMAGES}/cycle-reset-tea.jpg",
+        1,
+    ),
+    (
+        "Feminine Care",
+        "feminine-care",
+        "Gentle care, made with intention",
+        "Yoni oils and massage butters formulated with botanicals for feminine comfort and "
+        "lymphatic care.",
+        f"{IMAGES}/yoni-cleansing-oil.jpg",
+        2,
+    ),
+    (
+        "Skin & Body",
+        "skin-body",
+        "Clean textures the skin understands",
+        "Handcrafted butters, oils and washes with transparent botanical inputs.",
+        "",
+        3,
+    ),
+    (
+        "Essential Oils",
+        "essential-oils",
+        "Botanical aromas, purposeful blends",
+        "Steam-distilled oils and blends for atmosphere, massage and self-care.",
+        "",
+        4,
+    ),
+    (
+        "Eye Health",
+        "eye-health",
+        "Nourish vision from the inside",
+        "Formulated with lutein, zeaxanthin and botanical antioxidants.",
+        "",
+        5,
+    ),
+]
+
+# --------------------------------------------------------------------------- #
+#  Products                                                                   #
+# --------------------------------------------------------------------------- #
+# Prices are PLACEHOLDERS in naira - confirm the real retail prices before launch.
+PRODUCTS = [
+    dict(
+        category_slug="feminine-care",
+        name="Breast Massage Butter",
+        slug="breast-massage-butter",
+        short_benefit="Warm, nourishing butter for breast massage rituals.",
+        description=(
+            "A rich botanical butter crafted for gentle breast and chest massage. "
+            "Melts on contact and glides smoothly, supporting a calm, regular "
+            "self-care ritual rooted in lymphatic care traditions." 
+        ),
+        price="9500.00",
+        size="100 g",
+        sku="JN-BMB-01",
+        image=f"{IMAGES}/breast-massage-butter.jpg",
+        gallery=[
+            f"{IMAGES}/breast-massage-butter.jpg",
+            f"{IMAGES}/breast-massage-butter-2.jpg",
+            f"{IMAGES}/breast-massage-butter-3.jpg",
+            f"{IMAGES}/breast-massage-butter-4.jpg",
+        ],
+        benefits=[
+            "Melts on contact for smooth massage glide",
+            "Nourishing butters that absorb without heaviness",
+            "Supports a calm, regular self-massage ritual",
+        ],
+        ingredients=(
+            "Shea Butter, Cocoa Butter, Coconut Oil, Sweet Almond Oil, Vitamin E."
+        ),
+        directions=(
+            "Warm a small amount between palms and massage gently in slow circular "
+            "motions. Use as part of your regular self-care routine."
+        ),
+        who_it_is_for="Women seeking a gentle, intentional breast-care ritual.",
+        warnings="For external use only. Discontinue if irritation occurs.",
+        faqs=[],
+        is_featured=True,
+        rating="4.90",
+        review_count=12,
+    ),
+    dict(
+        category_slug="feminine-care",
+        name="Yoni Cleansing Oil",
+        slug="yoni-cleansing-oil",
+        short_benefit="A gentle botanical oil for daily feminine freshness.",
+        description=(
+            "A lightweight botanical cleansing oil for the external vulva area. "
+            "pH-aware and fragrance-free, it cleanses without dryness and leaves "
+            "skin feeling soft and comfortable." 
+        ),
+        price="7800.00",
+        size="100 ml",
+        sku="JN-YCO-01",
+        image=f"{IMAGES}/yoni-cleansing-oil.jpg",
+        gallery=[f"{IMAGES}/yoni-cleansing-oil.jpg"],
+        benefits=[
+            "Gentle daily cleansing without dryness",
+            "Fragrance-free, pH-aware formula",
+            "Light botanical oils that rinse clean",
+        ],
+        ingredients=(
+            "Sunflower Seed Oil, Jojoba Oil, Aloe Extract, Tea Tree Leaf Oil, Vitamin E."
+        ),
+        directions=(
+            "Apply a small amount to damp external skin, massage gently and rinse well. "
+            "External use only."
+        ),
+        who_it_is_for="Women seeking a gentle daily feminine wash alternative.",
+        warnings="External use only. Avoid internal use. Discontinue if irritation occurs.",
+        faqs=[],
+        is_featured=True,
+        rating="4.85",
+        review_count=18,
+    ),
+    dict(
+        category_slug="womens-wellness",
+        name="Cycle Reset Tea",
+        slug="cycle-reset-tea",
+        short_benefit="A botanical tea for a more intentional monthly ritual.",
+        description=(
+            "Cycle Reset Tea is a thoughtfully crafted botanical blend featuring organic cinnamon "
+            "bark, organic slippery elm and organic lady's mantle, with chaste tree berry extract.\n\n"
+            "Inspired by traditional herbal wellness practices, this blend is created for women who "
+            "want to make mindful self-care part of their monthly routine. Enjoy a warm cup as part "
+            "of your personal wellness ritual before and during your cycle."
+        ),
+        price="8500.00",
+        size="1 tea bag · makes 12 fl oz",
+        sku="JN-CRT-01",
+        image=f"{IMAGES}/cycle-reset-tea.jpg",
+        gallery=[f"{IMAGES}/cycle-reset-tea.jpg"],
+        benefits=[
+            "Traditional botanicals for monthly comfort",
+            "Caffeine-free and gentle on the stomach",
+            "A grounding ritual, morning or evening",
+        ],
+        ingredients=(
+            "Organic Cinnamon Bark, Organic Slippery Elm, Organic Lady's Mantle, "
+            "Chaste Tree Berry Extract."
+        ),
+        directions=(
+            "Steep 1 tea bag in 12 fl oz of freshly boiled water for 5-7 minutes. Enjoy warm, "
+            "before and during your cycle."
+        ),
+        who_it_is_for="Women who want a warm, traditional herbal ritual around their monthly cycle.",
+        warnings=(
+            "Not intended during pregnancy or breastfeeding without advice from your healthcare "
+            "provider. If you take medication or have a medical condition, speak to your doctor "
+            "first. Discontinue if you notice any reaction."
+        ),
+        disclaimer=(
+            "This is a herbal tea, not a medicine. It is not intended to diagnose, treat, cure or "
+            "prevent any disease."
+        ),
+        faqs=[
+            {
+                "q": "How often can I drink it?",
+                "a": "One cup a day is a comfortable starting point. Build the habit before and "
+                "during your cycle.",
+            }
+        ],
+        is_featured=True,
+        is_supplement=True,
+    ),
+    dict(
+        category_slug="womens-wellness",
+        name="Lenu Harmony Herbal Tea",
+        slug="lenu-harmony-herbal-tea",
+        short_benefit="Eleven botanicals blended for a soothing everyday ritual.",
+        description=(
+            "Lenu Harmony Herbal Tea is a vibrant botanical blend bringing together a wide selection "
+            "of traditional herbs, including burdock root, ginger root, cinnamon bark, turmeric "
+            "root, lemon balm, calendula and strawberry extract.\n\n"
+            "With its rich variety of botanicals, Lenu Harmony is designed for women who enjoy "
+            "incorporating herbal tea into their everyday self-care. It is a beautiful addition to a "
+            "morning wellness ritual, an afternoon tea break or a relaxing evening routine."
+        ),
+        price="9500.00",
+        size="1 tea bag · makes 8 fl oz",
+        sku="JN-LHT-01",
+        image=f"{IMAGES}/lenu-harmony-herbal-tea.jpg",
+        gallery=[f"{IMAGES}/lenu-harmony-herbal-tea.jpg"],
+        benefits=[
+            "Eleven herbs and botanical extracts in one blend",
+            "Ginger, turmeric and cinnamon warm the palate",
+            "Caffeine-free and suited to daily drinking",
+        ],
+        ingredients=(
+            "Organic Burdock Root, Organic Ginger Root, Organic Cinnamon Bark, Organic Turmeric "
+            "Root, Tabebuia Impetiginosa Bark Extract, Organic Melissa Officinalis Leaf Extract, "
+            "Stellaria Media Extract, Mitchella Repens Leaf Extract."
+        ),
+        directions=(
+            "Steep 1 tea bag in 8 fl oz of freshly boiled water for 5-7 minutes. Best enjoyed warm."
+        ),
+        who_it_is_for="Women building a daily herbal tea habit into a broader wellness routine.",
+        warnings=(
+            "Not intended during pregnancy or breastfeeding without advice from your healthcare "
+            "provider. Speak to your doctor before use if you take medication or have a medical "
+            "condition."
+        ),
+        disclaimer=(
+            "This is a herbal tea, not a medicine. It is not intended to diagnose, treat, cure or "
+            "prevent any disease."
+        ),
+        faqs=[
+            {
+                "q": "Does it contain caffeine?",
+                "a": "No. Every botanical in this blend is caffeine-free.",
+            }
+        ],
+        is_featured=True,
+        is_supplement=True,
+    ),
+    dict(
+        category_slug="womens-wellness",
+        name="Teen Comfort Flow",
+        slug="teen-comfort-flow",
+        short_benefit="Cool, calm and in control during your cycle.",
+        description=(
+            "Teen Comfort Flow was formulated for teenagers navigating cycle discomfort, bringing "
+            "together traditional botanicals in an approachable herbal tea ritual.\n\n"
+            "The blend features organic burdock root, ginger root and cinnamon bark, with soothing "
+            "lemon balm, to comfort PMS cramps, bloating and mood swings.\n\n"
+            "With its botanical ingredients and comforting tea ritual, Teen Comfort Flow can become "
+            "part of a teen's personal self-care routine during her monthly cycle. It is a simple way "
+            "to encourage healthy conversations around wellness, self-care and understanding your "
+            "body."
+        ),
+        price="7500.00",
+        size="1 tea bag · makes 8 fl oz",
+        sku="JN-TCF-01",
+        image=f"{IMAGES}/teen-comfort-flow.jpg",
+        gallery=[f"{IMAGES}/teen-comfort-flow.jpg"],
+        benefits=[
+            "Formulated for teenage cycle discomfort",
+            "Ginger and cinnamon in a gentle, approachable blend",
+            "Opens the door to healthy conversations about self-care",
+        ],
+        ingredients=(
+            "Organic Burdock Root, Organic Ginger Root, Organic Cinnamon Bark, Organic Alchemilla "
+            "Vulgaris Leaf Extract, Viburnum Opulus Leaf Extract, Chaste Tree Berry Extract, "
+            "Organic Melissa Officinalis Leaf Extract."
+        ),
+        directions=(
+            "Steep 1 tea bag in 8 fl oz of freshly boiled water for 5-7 minutes. Enjoy warm during "
+            "your cycle."
+        ),
+        who_it_is_for="Teenagers experiencing period cramps, bloating or mood swings.",
+        warnings=(
+            "For teenagers from 13 years. Not suitable during pregnancy. If your teen takes "
+            "medication, has a medical condition, or the discomfort is severe or persistent, speak "
+            "to a doctor before use."
+        ),
+        disclaimer=(
+            "This is a herbal tea, not a medicine. It is not intended to diagnose, treat, cure or "
+            "prevent any disease."
+        ),
+        faqs=[
+            {
+                "q": "Is this different from the adult teas?",
+                "a": "Yes. Teen Comfort Flow is blended with a younger person's cycle comfort in "
+                "mind, in a gentler, more approachable tea.",
+            }
+        ],
+        is_supplement=True,
+        is_featured=True,
+    ),
+    dict(
+        category_slug="womens-wellness",
+        name="Ease Flow Menorrhagia Tea",
+        slug="ease-flow-menorrhagia-tea",
+        short_benefit="A supportive blend for heavy menstrual flow.",
+        description=(
+            "Ease Flow is a thoughtfully crafted herbal blend designed for women who want to take "
+            "control of a heavy menstrual flow, helping to moderate excessive bleeding.\n\n"
+            "Its carefully selected ingredients make Ease Flow a natural addition to a warm, "
+            "comforting tea ritual. Enjoy a cup as part of your intentional approach to everyday "
+            "women's wellness."
+        ),
+        price="9000.00",
+        size="1 tea bag · makes 8 fl oz",
+        sku="JN-EFL-01",
+        image=f"{IMAGES}/ease-flow.jpg",
+        gallery=[f"{IMAGES}/ease-flow.jpg"],
+        benefits=[
+            "Blended for women managing a heavy flow",
+            "Shepherd's purse, lady's mantle and lemon balm",
+            "A warm ritual to build into your month",
+        ],
+        ingredients=(
+            "Capsella Bursa-Pastoris Extract, Organic Burdock Root, Organic Cinnamon Bark, "
+            "Organic Alchemilla Vulgaris Leaf Extract and Organic Melissa Officinalis Leaf Extract."
+        ),
+        directions=(
+            "Steep 1 tea bag in 8 fl oz of freshly boiled water for 5-7 minutes. Enjoy warm, "
+            "particularly around the heaviest days of your cycle."
+        ),
+        who_it_is_for="Women looking for botanical support alongside a heavy menstrual flow.",
+        warnings=(
+            "Heavy or prolonged bleeding can have a medical cause. Please see a doctor or midwife "
+            "for an assessment; this tea is a supportive ritual, not a replacement for care. Not "
+            "intended during pregnancy or breastfeeding without professional advice."
+        ),
+        disclaimer=(
+            "This is a herbal tea, not a medicine. It is not intended to diagnose, treat, cure or "
+            "prevent any disease."
+        ),
+        faqs=[
+            {
+                "q": "Can I drink it all month?",
+                "a": "Many women prefer to drink it in the days before and during their period. Use "
+                "whatever rhythm feels right for you.",
+            }
+        ],
+        is_supplement=True,
+        is_featured=True,
+    ),
+]
+
 
 
 class Command(BaseCommand):
@@ -78,10 +441,16 @@ class Command(BaseCommand):
         )
 
         cats = [
-            ("Women's Wellness", "womens-wellness", "Everyday rituals for feminine balance", "Thoughtful herbal support for cycle comfort, energy and inner calm.", IMG["women"], 1),
-            ("Essential Oils", "essential-oils", "Botanical aromas, purposeful blends", "Steam-distilled oils and blends for atmosphere, massage and self-care.", IMG["oils"], 2),
-            ("Eye Health", "eye-health", "Nourish vision from the inside", "Supplements formulated with lutein, zeaxanthin and botanical antioxidants.", IMG["eye"], 3),
-            ("Skin & Body", "skin-body", "Clean textures the skin understands", "Handcrafted creams, oils and washes with transparent botanical inputs.", IMG["skin"], 4),
+            ("Women's Wellness", "womens-wellness", "Everyday rituals for feminine balance",
+             "Herbal teas and botanical blends for cycle comfort, heavy-flow support and everyday women's wellness.",
+             f"{IMAGES}/cycle-reset-tea.jpg", 1),
+            ("Feminine Care", "feminine-care", "Gentle care, made with intention",
+             "Yoni oils and massage butters formulated with botanicals for feminine comfort and lymphatic care.",
+             f"{IMAGES}/yoni-cleansing-oil.jpg", 2),
+            ("Skin & Body", "skin-body", "Clean textures the skin understands",
+             "Handcrafted butters, oils and washes with transparent botanical inputs.", "", 3),
+            ("Essential Oils", "essential-oils", "Botanical aromas, purposeful blends",
+             "Steam-distilled oils and blends for atmosphere, massage and self-care.", "", 4),
         ]
         cat_map = {}
         for name, slug, tag, desc, img, order in cats:
@@ -91,195 +460,21 @@ class Command(BaseCommand):
             )
             cat_map[slug] = c
 
-        products = [
-            dict(
-                category=cat_map["skin-body"],
-                name="Shea & Hibiscus Body Butter",
-                slug="shea-hibiscus-body-butter",
-                short_benefit="Deep moisture with a petal-soft finish.",
-                description="Whipped West African shea and hibiscus extract melt into dry skin, leaving a cushioned glow without a heavy film.",
-                price="8500.00",
-                compare_at="9800.00",
-                size="250 ml",
-                sku="JN-SB-001",
-                image=IMG["cream"],
-                gallery=[IMG["cream"], IMG["skin"], IMG["soap"]],
-                benefits=["Locks in moisture for 24 hours", "Calms tightness after bathing", "Subtle hibiscus-vanilla scent"],
-                ingredients="Butyrospermum Parkii (Shea) Butter, Cocos Nucifera Oil, Hibiscus Sabdariffa Extract, Tocopherol, Cera Alba, Vanilla Planifolia.",
-                directions="Warm a pearl-size amount between palms. Sweep over damp skin after bathing.",
-                who_it_is_for="Dry, mature and sensitive skin seeking richer moisture.",
-                warnings="For external use only. Patch test on inner arm. Discontinue if irritation occurs.",
-                disclaimer="",
-                faqs=[{"q": "Is it greasy?", "a": "It absorbs in under a minute on damp skin."}, {"q": "Is it scented?", "a": "A soft botanical vanilla-hibiscus, no synthetic perfume."}],
-                is_featured=True,
-                is_supplement=False,
-                rating="4.90",
-                review_count=128,
-            ),
-            dict(
-                category=cat_map["skin-body"],
-                name="Turmeric Glow Cleansing Bar",
-                slug="turmeric-glow-cleansing-bar",
-                short_benefit="Gentle daily cleanse with golden botanicals.",
-                description="Cold-process soap with turmeric, honey and oat to lift dullness without stripping the barrier.",
-                price="3200.00",
-                size="120 g",
-                sku="JN-SB-002",
-                image=IMG["soap"],
-                gallery=[IMG["soap"]],
-                benefits=["Brightens uneven tone over time", "Oat soothes tightness", "Honey humectant finish"],
-                ingredients="Sodium Olivate, Sodium Cocoate, Aqua, Curcuma Longa Root Powder, Mel, Avena Sativa Kernel Flour.",
-                directions="Work into a cream lather. Massage 30 seconds. Rinse.",
-                who_it_is_for="Combination and dull-looking skin.",
-                warnings="Turmeric may temporarily tint very fair fabrics. Patch test recommended.",
-                faqs=[{"q": "Will it stain my washcloth?", "a": "Rinse promptly; staining is uncommon on modern fabrics."}],
-                is_featured=True,
-                rating="4.70",
-                review_count=86,
-            ),
-            dict(
-                category=cat_map["skin-body"],
-                name="Rosehip Restore Face Serum",
-                slug="rosehip-restore-face-serum",
-                short_benefit="Lightweight oil serum for texture and glow.",
-                description="Cold-pressed rosehip and squalane support the look of fine lines and post-blemish marks.",
-                price="12500.00",
-                size="30 ml",
-                sku="JN-SB-003",
-                image=IMG["serum"],
-                gallery=[IMG["serum"]],
-                benefits=["Softens the look of texture", "Non-comedogenic oil profile", "Evening ritual staple"],
-                ingredients="Rosa Canina Fruit Oil, Squalane, Tocopherol, Calendula Officinalis Extract.",
-                directions="2–3 drops after water-based serums, night or morning.",
-                who_it_is_for="Normal, dry and combination skin.",
-                warnings="Introduce slowly if you are oil-averse. Discontinue if breakouts persist.",
-                faqs=[{"q": "Can I use with retinoids?", "a": "Yes — apply after water-based actives, before cream."}],
-                is_featured=True,
-                rating="4.85",
-                review_count=64,
-            ),
-            dict(
-                category=cat_map["essential-oils"],
-                name="Calm Grove Essential Blend",
-                slug="calm-grove-essential-blend",
-                short_benefit="Cedar, lavender and sweet orange for evening air.",
-                description="A grounding diffusion blend designed for wind-down rituals and quiet rooms.",
-                price="7800.00",
-                size="15 ml",
-                sku="JN-EO-001",
-                image=IMG["oils"],
-                gallery=[IMG["oils"]],
-                benefits=["Softens the atmosphere", "Pairs with massage oil", "No synthetic fragrance"],
-                ingredients="Lavandula Angustifolia Oil, Cedrus Atlantica Oil, Citrus Sinensis Peel Oil.",
-                directions="3–5 drops in a water diffuser. For massage, dilute to 1% in a carrier oil.",
-                who_it_is_for="Anyone building a calmer evening ritual.",
-                warnings="Never ingest. Keep away from eyes and children. Dilute before skin use. Not for use in pregnancy without practitioner advice.",
-                faqs=[{"q": "Safe around pets?", "a": "Diffuse in a ventilated room and allow pets an exit path."}],
-                is_featured=True,
-                rating="4.80",
-                review_count=51,
-            ),
-            dict(
-                category=cat_map["essential-oils"],
-                name="Citrus Dawn Single-Note Orange",
-                slug="citrus-dawn-orange-oil",
-                short_benefit="Bright steam-distilled sweet orange.",
-                description="A single-note oil for morning diffusion and homemade cleaning sprays.",
-                price="4500.00",
-                size="15 ml",
-                sku="JN-EO-002",
-                image=IMG["oils"],
-                gallery=[IMG["oils"]],
-                benefits=["Uplifting citrus aroma", "Versatile household use when diluted"],
-                ingredients="Citrus Sinensis Peel Oil.",
-                directions="Diffuse 4 drops. Phototoxic — do not apply neat before sun exposure.",
-                who_it_is_for="Homes that love a clean, bright scent.",
-                warnings="Phototoxic. Dilute. External use only.",
-                faqs=[],
-                is_featured=False,
-                rating="4.60",
-                review_count=33,
-            ),
-            dict(
-                category=cat_map["womens-wellness"],
-                name="Moon Cycle Comfort Tea",
-                slug="moon-cycle-comfort-tea",
-                short_benefit="A warming cup for cramp-heavy days.",
-                description="Ginger, raspberry leaf and chamomile blended for comfort-led evenings.",
-                price="6200.00",
-                size="40 g / 20 sachets",
-                sku="JN-WW-001",
-                image=IMG["tea"],
-                gallery=[IMG["tea"], IMG["women"]],
-                benefits=["Soothing warm ritual", "Caffeine-free", "Gently spiced"],
-                ingredients="Zingiber Officinale, Rubus Idaeus Leaf, Matricaria Recutita, Cinnamomum Verum.",
-                directions="Steep 1 sachet in 200 ml just-boiled water for 6 minutes.",
-                who_it_is_for="Women seeking a comforting herbal cup around their cycle.",
-                warnings="Not a medicine. Consult a clinician if pregnant or on medication.",
-                disclaimer="This product is not intended to diagnose, treat, cure or prevent any disease.",
-                faqs=[{"q": "How often?", "a": "1–2 cups on days you want extra comfort."}],
-                is_featured=True,
-                rating="4.75",
-                review_count=90,
-            ),
-            dict(
-                category=cat_map["womens-wellness"],
-                name="Balance Oil Roller",
-                slug="balance-oil-roller",
-                short_benefit="Pulse-point blend for mid-day reset.",
-                description="Clary sage and geranium in jojoba, sized for a bag or desk drawer.",
-                price="5400.00",
-                size="10 ml roller",
-                sku="JN-WW-002",
-                image=IMG["oils"],
-                gallery=[IMG["oils"]],
-                benefits=["Portable ritual", "Pre-diluted for skin"],
-                ingredients="Simmondsia Chinensis Oil, Salvia Sclarea Oil, Pelargonium Graveolens Oil.",
-                directions="Roll onto wrists and breathe slowly for four counts.",
-                who_it_is_for="On-the-go wellness routines.",
-                warnings="Avoid broken skin. External use only.",
-                faqs=[],
-                is_featured=False,
-                rating="4.55",
-                review_count=27,
-            ),
-            dict(
-                category=cat_map["eye-health"],
-                name="Lutein + Berry Vision Capsules",
-                slug="lutein-berry-vision-capsules",
-                short_benefit="Daily lutein, zeaxanthin and bilberry.",
-                description="A science-aware supplement for adults who spend long hours on screens.",
-                price="18900.00",
-                size="60 capsules / 30 days",
-                sku="JN-EH-001",
-                image=IMG["eye"],
-                gallery=[IMG["eye"]],
-                benefits=["Provides lutein and zeaxanthin", "Includes bilberry extract", "Once-daily adult serving"],
-                ingredients="Lutein, Zeaxanthin, Vaccinium Myrtillus Extract, Sunflower Oil, Vegetarian Capsule.",
-                directions="Adults: 2 capsules daily with food.",
-                who_it_is_for="Adults seeking nutritional support for eye health.",
-                warnings="Keep out of reach of children. Do not exceed the stated dose. Seek advice if pregnant, nursing or on medication.",
-                disclaimer="These statements have not been evaluated by the FDA or NAFDAC. This product is not intended to diagnose, treat, cure or prevent any disease.",
-                faqs=[{"q": "Can I take with other vitamins?", "a": "Usually yes — ask your clinician about total lutein intake."}],
-                is_featured=True,
-                is_supplement=True,
-                rating="4.65",
-                review_count=41,
-            ),
-        ]
+        for p_data in PRODUCTS:
+            data = dict(p_data)
+            cat_slug = data.pop("category_slug")
+            data["category"] = cat_map[cat_slug]
+            Product.objects.update_or_create(slug=data["slug"], defaults=data)
 
-        for data in products:
-            slug = data["slug"]
-            Product.objects.update_or_create(slug=slug, defaults=data)
 
-        p = Product.objects.get(slug="shea-hibiscus-body-butter")
+        p = Product.objects.get(slug="breast-massage-butter")
         Review.objects.get_or_create(
             product=p, author="Amaka O.",
-            defaults={"rating": 5, "title": "Finally a butter that sinks in", "body": "My elbows and shins stay soft through harmattan. The scent is quiet and lovely."},
+            defaults={"rating": 5, "title": "A calming evening ritual", "body": "Melts beautifully and absorbs well. The massage routine has become my quiet time."},
         )
         Review.objects.get_or_create(
             product=p, author="Chioma E.",
-            defaults={"rating": 5, "title": "Gifted and kept one", "body": "Texture is cloud-like. Using after evening shower has become a ritual."},
+            defaults={"rating": 5, "title": "Gentle and nourishing", "body": "Smooth glide, no heaviness. My skin feels soft and cared for."},
         )
 
         articles = [
@@ -293,7 +488,7 @@ class Command(BaseCommand):
         for title, slug, excerpt, label, body in articles:
             Article.objects.update_or_create(
                 slug=slug,
-                defaults={"title": title, "excerpt": excerpt, "body": body, "category_label": label, "cover": IMG["skin"]},
+                defaults={"title": title, "excerpt": excerpt, "body": body, "category_label": label, "cover": ""},
             )
 
         self.stdout.write(self.style.SUCCESS("Seeded Jakeala Naturals catalog, reviews and articles."))

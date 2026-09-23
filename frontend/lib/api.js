@@ -1,5 +1,24 @@
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
+// Origin that serves media. Strips the trailing "/api" so the same value works
+// for API calls and for image paths.
+const API_ORIGIN = API.replace(/\/api\/?$/, "");
+
+/**
+ * Resolve a product or category image to a full URL.
+ *
+ * Catalogue images may be stored either as an absolute URL (an Unsplash link, a
+ * CDN) or as a site-relative path such as `/media/products/cycle-reset-tea.jpg`.
+ * Relative paths are served by the Django backend, so they are prefixed with the
+ * API origin here. Storing relative paths keeps one catalogue row working on
+ * localhost and in production without hardcoding a domain.
+ */
+export function imageUrl(src) {
+  if (!src) return "";
+  if (/^(https?:)?\/\//i.test(src) || src.startsWith("data:")) return src;
+  return `${API_ORIGIN}${src.startsWith("/") ? src : `/${src}`}`;
+}
+
 export function sessionKey() {
   if (typeof window === "undefined") return "guest";
   let key = localStorage.getItem("jn_session");
@@ -38,19 +57,19 @@ export const subscribe = (email) => api("/newsletter/", { method: "POST", body: 
 export const sendContact = (body) => api("/contact/", { method: "POST", body: JSON.stringify(body) });
 
 export const FALLBACK_CATEGORIES = [
-  { slug: "womens-wellness", name: "Women's Wellness", tagline: "Everyday rituals for feminine balance", image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=900&q=80" },
+  { slug: "womens-wellness", name: "Women's Wellness", tagline: "Everyday rituals for feminine balance", image: "/media/products/cycle-reset-tea.jpg" },
+  { slug: "feminine-care", name: "Feminine Care", tagline: "Gentle care, made with intention", image: "/media/products/yoni-cleansing-oil.jpg" },
+  { slug: "skin-body", name: "Skin & Body", tagline: "Clean textures the skin understands", image: "/media/products/breast-massage-butter.jpg" },
   { slug: "essential-oils", name: "Essential Oils", tagline: "Botanical aromas, purposeful blends", image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=900&q=80" },
-  { slug: "eye-health", name: "Eye Health", tagline: "Nourish vision from the inside", image: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=900&q=80" },
-  { slug: "skin-body", name: "Skin & Body", tagline: "Clean textures the skin understands", image: "https://images.unsplash.com/photo-1570172616994-4597c4d6433d?w=900&q=80" },
 ];
 
 export const FALLBACK_PRODUCTS = [
-  { slug: "shea-hibiscus-body-butter", name: "Shea & Hibiscus Body Butter", short_benefit: "Deep moisture with a petal-soft finish.", price: "8500.00", compare_at: "9800.00", size: "250 ml", image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=900&q=80", rating: "4.90", review_count: 128, category_slug: "skin-body", is_featured: true },
-  { slug: "turmeric-glow-cleansing-bar", name: "Turmeric Glow Cleansing Bar", short_benefit: "Gentle daily cleanse with golden botanicals.", price: "3200.00", image: "https://images.unsplash.com/photo-1617897903246-719242758050?w=900&q=80", rating: "4.70", review_count: 86, category_slug: "skin-body", is_featured: true },
-  { slug: "rosehip-restore-face-serum", name: "Rosehip Restore Face Serum", short_benefit: "Lightweight oil serum for texture and glow.", price: "12500.00", image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=900&q=80", rating: "4.85", review_count: 64, category_slug: "skin-body", is_featured: true },
-  { slug: "calm-grove-essential-blend", name: "Calm Grove Essential Blend", short_benefit: "Cedar, lavender and sweet orange for evening air.", price: "7800.00", image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=900&q=80", rating: "4.80", review_count: 51, category_slug: "essential-oils", is_featured: true },
-  { slug: "moon-cycle-comfort-tea", name: "Moon Cycle Comfort Tea", short_benefit: "A warming cup for cramp-heavy days.", price: "6200.00", image: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=900&q=80", rating: "4.75", review_count: 90, category_slug: "womens-wellness", is_featured: true },
-  { slug: "lutein-berry-vision-capsules", name: "Lutein + Berry Vision Capsules", short_benefit: "Daily lutein, zeaxanthin and bilberry.", price: "18900.00", image: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=900&q=80", rating: "4.65", review_count: 41, category_slug: "eye-health", is_featured: true, is_supplement: true },
+  { slug: "breast-massage-butter", name: "Breast Massage Butter", short_benefit: "Warm, nourishing butter for breast massage rituals.", price: "9500.00", image: "/media/products/breast-massage-butter.jpg", rating: "4.90", review_count: 12, category_slug: "feminine-care", is_featured: true },
+  { slug: "cycle-reset-tea", name: "Cycle Reset Tea", short_benefit: "A botanical tea for a more intentional monthly ritual.", price: "8500.00", image: "/media/products/cycle-reset-tea.jpg", rating: "4.90", review_count: 132, category_slug: "womens-wellness", is_featured: true },
+  { slug: "lenu-harmony-herbal-tea", name: "Lenu Harmony Herbal Tea", short_benefit: "Gentle harmony for bloating, mood and pampering.", price: "9000.00", image: "/media/products/lenu-harmony-herbal-tea.jpg", rating: "4.85", review_count: 64, category_slug: "womens-wellness", is_featured: true },
+  { slug: "teen-comfort-flow", name: "Teen Comfort Flow", short_benefit: "Cool, calm and in control during your cycle.", price: "7500.00", image: "/media/products/teen-comfort-flow.jpg", rating: "4.80", review_count: 45, category_slug: "womens-wellness", is_featured: true },
+  { slug: "ease-flow-menorrhagia-tea", name: "Ease Flow Menorrhagia Tea", short_benefit: "A supportive blend for heavy menstrual flow.", price: "9000.00", image: "/media/products/ease-flow.jpg", rating: "4.82", review_count: 38, category_slug: "womens-wellness", is_featured: true },
+  { slug: "yoni-cleansing-oil", name: "Yoni Cleansing Oil", short_benefit: "A gentle botanical oil for daily feminine freshness.", price: "7800.00", image: "/media/products/yoni-cleansing-oil.jpg", rating: "4.85", review_count: 18, category_slug: "feminine-care", is_featured: true },
 ];
 
 export function naira(value) {

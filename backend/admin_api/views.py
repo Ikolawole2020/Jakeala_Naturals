@@ -3,12 +3,13 @@ from decimal import Decimal
 from django.contrib.auth import authenticate
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from catalog.models import Category, Product, Review
 from commerce.models import Order
+from config.throttles import AdminLoginThrottle
 from content.models import Article, ContactMessage, NewsletterSubscriber
 
 from .serializers import (
@@ -24,14 +25,25 @@ from .serializers import (
 
 @api_view(["POST"])
 @permission_classes([])
+@throttle_classes([AdminLoginThrottle])
 def admin_login(request):
+    """Staff sign-in.
+
+    Rate limited per caller: without it this endpoint allowed unlimited password
+    guessing against a known username.
+    """
     username = request.data.get("username", "").strip()
     password = request.data.get("password", "")
     user = authenticate(request, username=username, password=password)
     if user is None or not user.is_staff:
         return Response({"detail": "Invalid credentials or not a staff account."}, status=status.HTTP_401_UNAUTHORIZED)
-    token, _ = Token.objects.get_or_create(user=user)
+    # Refresh the expiry clock on every sign-in (see AUTH_TOKEN_TTL).
+    token, created = Token.objects.get_or_create(user=user)
+    if not created:
+        token.delete()
+        token = Token.objects.create(user=user)
     return Response({"token": token.key, "username": user.username})
+
 
 
 @api_view(["POST"])

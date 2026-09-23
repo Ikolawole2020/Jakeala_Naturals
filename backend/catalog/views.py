@@ -31,5 +31,10 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False)
     def featured(self, request):
-        qs = self.get_queryset().filter(is_featured=True)[:8]
-        return Response(ProductListSerializer(qs, many=True).data)
+        qs = self.get_queryset().filter(is_featured=True)
+        items = list(qs)
+        # Homepage order: Breast Massage Butter first, Cycle Reset Tea (the
+        # cup image) second, everything else in A-Z order.
+        first = {"breast-massage-butter": 0, "cycle-reset-tea": 1}
+        items.sort(key=lambda p: (first.get(p.slug, 2), p.name.lower()))
+        return Response(ProductListSerializer(items[:8], many=True).data)

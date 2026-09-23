@@ -6,9 +6,11 @@ from django.urls import include, path
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/admin/", include("admin_api.urls")),
+    path("api/", include("accounts.urls")),
     path("api/", include("catalog.urls")),
     path("api/", include("commerce.urls")),
     path("api/", include("content.urls")),
+    path("api/", include("payments.urls")),
 ]
 
 if settings.DEBUG:

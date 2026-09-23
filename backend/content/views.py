@@ -14,6 +14,9 @@ class ArticleViewSet(viewsets.ReadOnlyModelViewSet):
 class NewsletterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = NewsletterSubscriber.objects.all()
     serializer_class = NewsletterSerializer
+    # Sign-up only, and capped per caller so the form cannot be used to spam the
+    # subscriber list.
+    throttle_scope = "newsletter"
 
     def create(self, request, *args, **kwargs):
         ser = self.get_serializer(data=request.data)
@@ -25,3 +28,7 @@ class NewsletterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 class ContactViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = ContactMessage.objects.all()
     serializer_class = ContactSerializer
+    # The enquiry form writes to the database and can trigger email, so it is
+    # rate limited rather than open to unlimited automated posts.
+    throttle_scope = "contact"
+

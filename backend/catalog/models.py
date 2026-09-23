@@ -6,7 +6,12 @@ class Category(models.Model):
     slug = models.SlugField(unique=True)
     tagline = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
-    image = models.URLField(blank=True)
+    image = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Absolute URL, or a site-relative path such as /media/products/name.jpg",
+    )
+
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -27,7 +32,11 @@ class Product(models.Model):
     compare_at = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     size = models.CharField(max_length=80, blank=True)
     sku = models.CharField(max_length=40, unique=True)
-    image = models.URLField()
+    image = models.CharField(
+        max_length=500,
+        help_text="Absolute URL, or a site-relative path such as /media/products/name.jpg",
+    )
+
     gallery = models.JSONField(default=list, blank=True)
     benefits = models.JSONField(default=list, blank=True)
     ingredients = models.TextField(blank=True)
@@ -39,6 +48,14 @@ class Product(models.Model):
     is_featured = models.BooleanField(default=False)
     is_supplement = models.BooleanField(default=False)
     in_stock = models.BooleanField(default=True)
+    # ``None`` means "not tracked" (a service, or a made-to-order item). When it
+    # holds a number, checkout validates against it and payment decrements it.
+    stock_quantity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Leave blank to sell without tracking stock.",
+    )
+
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=4.80)
     review_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

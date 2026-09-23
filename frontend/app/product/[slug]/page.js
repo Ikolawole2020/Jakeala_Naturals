@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import ProductGallery from "@/components/ProductGallery";
 import AddToCart from "@/components/AddToCart";
 import ProductCard from "@/components/ProductCard";
-import { FALLBACK_PRODUCTS, getProduct, getRelated, naira, results } from "@/lib/api";
+import { FALLBACK_PRODUCTS, getProduct, getRelated, imageUrl, naira, results } from "@/lib/api";
 import { siteUrl } from "@/lib/site";
 
 const FALLBACK_DETAIL = {
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }) {
     description: p ? p.short_benefit : undefined,
     alternates: { canonical: siteUrl(`/product/${params.slug}`) },
     openGraph: p
-      ? { title: p.name, description: p.short_benefit, images: [p.image] }
+      ? { title: p.name, description: p.short_benefit, images: [imageUrl(p.image)] }
       : undefined,
   };
 }
@@ -74,7 +74,8 @@ export default async function ProductPage({ params }) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: p.name,
-    image: p.gallery && p.gallery.length ? p.gallery : [p.image],
+    image: (p.gallery && p.gallery.length ? p.gallery : [p.image]).map((src) => imageUrl(src)),
+
     description: p.short_benefit || p.description,
     sku: p.sku,
     brand: { "@type": "Brand", name: "Jakeala Naturals" },

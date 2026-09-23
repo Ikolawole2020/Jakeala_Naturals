@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getCart, naira, sessionKey, updateCartItem } from "@/lib/api";
+import { getCart, imageUrl, naira, sessionKey, updateCartItem } from "@/lib/api";
 
 export default function CartDrawer({ onClose }) {
   const [cart, setCart] = useState({ items: [], subtotal: "0" });
@@ -37,7 +37,7 @@ export default function CartDrawer({ onClose }) {
           {(cart.items || []).length === 0 && <p className="muted">Your basket is empty. Begin with a ritual you will actually keep.</p>}
           {(cart.items || []).map((item) => (
             <div className="line" key={item.id}>
-              <img src={item.product.image} alt="" />
+              <img src={imageUrl(item.product.image)} alt="" />
               <div>
                 <strong>{item.product.name}</strong>
                 <p className="muted">{item.subscribe ? "Subscribe & save 10%" : "One-time"}</p>

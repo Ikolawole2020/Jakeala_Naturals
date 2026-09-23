@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { imageUrl } from "@/lib/api";
 
 export default function ProductGallery({ images, name }) {
   const list = images && images.length ? images : [null];
@@ -10,7 +11,7 @@ export default function ProductGallery({ images, name }) {
     <div className="gallery">
       <div className="main">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={list[i] || "/logo.png"} alt={name} />
+        <img src={imageUrl(list[i]) || "/logo.png"} alt={name} />
       </div>
       {list.length > 1 && (
         <div className="thumbs">
@@ -18,7 +19,7 @@ export default function ProductGallery({ images, name }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               key={idx}
-              src={src || "/logo.png"}
+              src={imageUrl(src) || "/logo.png"}
               alt={`View of ${name}`}
               className={idx === i ? "on" : ""}
               onClick={() => setI(idx)}

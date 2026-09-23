@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { naira } from "@/lib/api";
+import { imageUrl, naira } from "@/lib/api";
 
 export default function ProductCard({ product }) {
   return (
     <article className="product-card">
       <Link href={`/product/${product.slug}`}>
         <div className="thumb">
-          <img src={product.image} alt={product.name} />
+          <img src={imageUrl(product.image)} alt={product.name} />
         </div>
         <div className="body">
           <p className="kicker" style={{ fontSize: 11 }}>

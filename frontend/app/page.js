@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { imageUrl } from "@/lib/api";
+
 import Newsletter from "@/components/Newsletter";
 import ProductCard from "@/components/ProductCard";
 import { FALLBACK_CATEGORIES, FALLBACK_PRODUCTS, getCategories, getFeatured, getArticles, results } from "@/lib/api";
@@ -44,7 +46,7 @@ export default async function HomePage() {
           <div className="grid-4">
             {(categories.length ? categories : FALLBACK_CATEGORIES).map((c) => (
               <Link key={c.slug} href={`/category/${c.slug}`} className="cat-card">
-                <img src={c.image} alt="" />
+                <img src={imageUrl(c.image)} alt="" />
                 <div className="shade">
                   <h3>{c.name}</h3>
                   <span>{c.tagline}</span>
