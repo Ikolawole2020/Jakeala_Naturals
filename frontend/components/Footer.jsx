@@ -13,9 +13,7 @@ export default function Footer() {
         <div>
           <h4>Shop</h4>
           <Link href="/category/womens-wellness">Women&apos;s Wellness</Link>
-          <Link href="/category/essential-oils">Essential Oils</Link>
-          <Link href="/category/eye-health">Eye Health</Link>
-          <Link href="/category/skin-body">Skin & Body</Link>
+          <Link href="/category/feminine-care">Feminine Care</Link>
         </div>
         <div>
           <h4>House</h4>

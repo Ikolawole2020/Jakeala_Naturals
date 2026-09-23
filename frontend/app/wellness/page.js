@@ -7,7 +7,6 @@ export default async function WellnessPage() {
   let articles = [
     { slug: "reading-inci-lists", title: "How to read a botanical INCI list", excerpt: "A calm walkthrough of ingredient order.", category_label: "Guides" },
     { slug: "five-minute-evening-ritual", title: "Building a 5-minute evening ritual", excerpt: "Oil, breath, and a warm cloth.", category_label: "Self-Care" },
-    { slug: "screen-hours-nutrition", title: "Screen hours and nutritional support", excerpt: "What lutein and zeaxanthin actually do.", category_label: "Eye Health" },
   ];
   try {
     const remote = results(await getArticles());

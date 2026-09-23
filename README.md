@@ -76,7 +76,7 @@ Open http://localhost:3000
 | --- | --- |
 | `/` | Home (hero, categories, promise, featured, education, trust, newsletter) |
 | `/shop` | Catalog (search via `?q=`) |
-| `/category/[slug]` | Collection (womens-wellness, essential-oils, eye-health, skin-body) |
+| `/category/[slug]` | Collection (womens-wellness, feminine-care) |
 | `/product/[slug]` | Product detail (gallery, buy box, ingredients, directions, warnings, FAQs, reviews, related, sticky cart, JSON-LD) |
 | `/wellness` / `/wellness/[slug]` | Wellness journal index + article |
 | `/about` `/contact` `/wholesale` | Brand story, support, wholesale inquiry |

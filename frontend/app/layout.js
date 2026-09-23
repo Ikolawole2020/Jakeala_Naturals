@@ -10,7 +10,7 @@ export const metadata = {
     template: "%s · Jakeala Naturals",
   },
   description:
-    "Jakeala Naturals brings handcrafted herbal care together with modern natural wellness — skin and body, women's wellness, essential oils and eye-health supplements.",
+    "Jakeala Naturals brings handcrafted herbal care together with modern natural wellness — women's wellness teas and gentle feminine care.",
   metadataBase: new URL(SITE_URL),
 };
 

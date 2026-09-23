@@ -59,8 +59,6 @@ export const sendContact = (body) => api("/contact/", { method: "POST", body: JS
 export const FALLBACK_CATEGORIES = [
   { slug: "womens-wellness", name: "Women's Wellness", tagline: "Everyday rituals for feminine balance", image: "/media/products/cycle-reset-tea.jpg" },
   { slug: "feminine-care", name: "Feminine Care", tagline: "Gentle care, made with intention", image: "/media/products/yoni-cleansing-oil.jpg" },
-  { slug: "skin-body", name: "Skin & Body", tagline: "Clean textures the skin understands", image: "/media/products/breast-massage-butter.jpg" },
-  { slug: "essential-oils", name: "Essential Oils", tagline: "Botanical aromas, purposeful blends", image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=900&q=80" },
 ];
 
 export const FALLBACK_PRODUCTS = [

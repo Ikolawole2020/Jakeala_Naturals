@@ -72,30 +72,6 @@ CATEGORIES = [
         f"{IMAGES}/yoni-cleansing-oil.jpg",
         2,
     ),
-    (
-        "Skin & Body",
-        "skin-body",
-        "Clean textures the skin understands",
-        "Handcrafted butters, oils and washes with transparent botanical inputs.",
-        "",
-        3,
-    ),
-    (
-        "Essential Oils",
-        "essential-oils",
-        "Botanical aromas, purposeful blends",
-        "Steam-distilled oils and blends for atmosphere, massage and self-care.",
-        "",
-        4,
-    ),
-    (
-        "Eye Health",
-        "eye-health",
-        "Nourish vision from the inside",
-        "Formulated with lutein, zeaxanthin and botanical antioxidants.",
-        "",
-        5,
-    ),
 ]
 
 # --------------------------------------------------------------------------- #
@@ -447,10 +423,6 @@ class Command(BaseCommand):
             ("Feminine Care", "feminine-care", "Gentle care, made with intention",
              "Yoni oils and massage butters formulated with botanicals for feminine comfort and lymphatic care.",
              f"{IMAGES}/yoni-cleansing-oil.jpg", 2),
-            ("Skin & Body", "skin-body", "Clean textures the skin understands",
-             "Handcrafted butters, oils and washes with transparent botanical inputs.", "", 3),
-            ("Essential Oils", "essential-oils", "Botanical aromas, purposeful blends",
-             "Steam-distilled oils and blends for atmosphere, massage and self-care.", "", 4),
         ]
         cat_map = {}
         for name, slug, tag, desc, img, order in cats:
@@ -482,13 +454,14 @@ class Command(BaseCommand):
              "The first five ingredients usually make up most of the formula. Look for butters and oils you recognise. Extracts appear lower because they are used in smaller amounts. Jakeala lists every botanical input in plain language on every product page."),
             ("Building a 5-minute evening ritual", "five-minute-evening-ritual", "Oil, breath, and a warm cloth — no 12-step performance required.", "Self-Care",
              "Dim one light. Cleanse. Press a facial oil into damp skin. Sit for four slow breaths. That is enough on a difficult day. Consistency outruns complexity."),
-            ("Screen hours and nutritional support", "screen-hours-nutrition", "What lutein and zeaxanthin actually do — and what a supplement cannot claim.", "Eye Health",
-             "Macular pigments help filter high-energy visible light. A supplement can contribute to daily intake. It is not a treatment for eye disease. Rest your gaze every 20 minutes and keep check-ups with an optometrist."),
         ]
+        keep_article_slugs = {slug for _, slug, _, _, _ in articles}
         for title, slug, excerpt, label, body in articles:
             Article.objects.update_or_create(
                 slug=slug,
                 defaults={"title": title, "excerpt": excerpt, "body": body, "category_label": label, "cover": ""},
             )
+        Article.objects.exclude(slug__in=keep_article_slugs).delete()
+        Category.objects.exclude(slug__in={slug for _, slug, *_ in cats}).delete()
 
         self.stdout.write(self.style.SUCCESS("Seeded Jakeala Naturals catalog, reviews and articles."))

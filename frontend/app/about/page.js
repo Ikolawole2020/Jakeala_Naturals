@@ -10,8 +10,8 @@ export default function AboutPage() {
         The brand is rooted in the belief that personal care should feel thoughtful, inclusive and connected to nature.
       </p>
       <p style={{ marginTop: 16 }}>
-        We create and curate products designed to support everyday rituals — from skin and body care to women&apos;s wellness,
-        essential-oil solutions and eye-health supplements.
+        We create products designed to support everyday rituals — women&apos;s wellness teas and gentle feminine care, made
+        with transparent botanical ingredients.
       </p>
       <p style={{ marginTop: 16 }}>
         Our goal is to make natural wellness easier to understand and easier to incorporate into everyday life. Every product

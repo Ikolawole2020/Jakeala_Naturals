@@ -2,7 +2,7 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "jakealanaturals.pythonanywhere.com" },
       { protocol: "http", hostname: "localhost" },
     ],
   },

@@ -92,7 +92,6 @@ export default async function HomePage() {
             {(articles.length ? articles : [
               { slug: "reading-inci-lists", title: "How to read a botanical INCI list", excerpt: "Ingredient order, extracts, and what fragrance can hide.", category_label: "Guides" },
               { slug: "five-minute-evening-ritual", title: "Building a 5-minute evening ritual", excerpt: "Oil, breath, and a warm cloth.", category_label: "Self-Care" },
-              { slug: "screen-hours-nutrition", title: "Screen hours and nutritional support", excerpt: "What lutein can and cannot claim.", category_label: "Eye Health" },
             ]).slice(0, 3).map((a) => (
               <Link key={a.slug} href={`/wellness/${a.slug}`} className="product-card" style={{ padding: 22 }}>
                 <p className="kicker">{a.category_label}</p>

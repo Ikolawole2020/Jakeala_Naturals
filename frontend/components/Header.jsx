@@ -9,9 +9,7 @@ import CartDrawer from "./CartDrawer";
 const NAV = [
   ["/shop", "Shop"],
   ["/category/womens-wellness", "Women"],
-  ["/category/essential-oils", "Oils"],
-  ["/category/eye-health", "Eye Health"],
-  ["/category/skin-body", "Skin & Body"],
+  ["/category/feminine-care", "Feminine Care"],
   ["/wellness", "Wellness"],
   ["/about", "Our Story"],
 ];

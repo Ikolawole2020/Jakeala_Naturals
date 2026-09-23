@@ -18,13 +18,6 @@ const FALLBACK_ARTICLES = {
     body:
       "Dim one light. Cleanse. Press a facial oil into damp skin. Sit for four slow breaths. That is enough on a difficult day. Consistency outruns complexity.",
   },
-  "screen-hours-nutrition": {
-    title: "Screen hours and nutritional support",
-    category_label: "Eye Health",
-    excerpt: "What lutein and zeaxanthin actually do — and what a supplement cannot claim.",
-    body:
-      "Macular pigments help filter high-energy visible light. A supplement can contribute to daily intake. It is not a treatment for eye disease. Rest your gaze every 20 minutes and keep check-ups with an optometrist.",
-  },
 };
 
 export async function generateMetadata({ params }) {
