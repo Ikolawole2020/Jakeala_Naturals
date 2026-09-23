@@ -438,6 +438,11 @@ class Command(BaseCommand):
             data["category"] = cat_map[cat_slug]
             Product.objects.update_or_create(slug=data["slug"], defaults=data)
 
+        # Products / categories / articles that are not in this file are stale
+        # placeholders from earlier development. Products use PROTECT on their
+        # category FK, so delete stale products BEFORE pruning categories.
+        Product.objects.exclude(slug__in={d["slug"] for d in PRODUCTS}).delete()
+        Category.objects.exclude(slug__in={slug for _, slug, *_ in cats}).delete()
 
         p = Product.objects.get(slug="breast-massage-butter")
         Review.objects.get_or_create(
@@ -462,6 +467,5 @@ class Command(BaseCommand):
                 defaults={"title": title, "excerpt": excerpt, "body": body, "category_label": label, "cover": ""},
             )
         Article.objects.exclude(slug__in=keep_article_slugs).delete()
-        Category.objects.exclude(slug__in={slug for _, slug, *_ in cats}).delete()
 
         self.stdout.write(self.style.SUCCESS("Seeded Jakeala Naturals catalog, reviews and articles."))
