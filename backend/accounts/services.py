@@ -17,6 +17,7 @@ before EmailJS is set up, without ever silently dropping mail in production
 import json
 import logging
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from django.conf import settings
@@ -76,7 +77,14 @@ def send_template(template_id, params, *, to_email="", kind="email"):
     request = urllib.request.Request(
         EMAILJS_ENDPOINT,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            # EmailJS treats requests without an Origin header as "non-browser"
+            # calls and rejects them with 403/1010. Sending the site's origin
+            # identifies us as the storefront. (The dashboard toggle "Allow
+            # EmailJS API for non-browser applications" must still be enabled.)
+            "Origin": settings.SITE_URL,
+        },
         method="POST",
     )
 
@@ -99,18 +107,25 @@ def send_template(template_id, params, *, to_email="", kind="email"):
 # --------------------------------------------------------------------------- #
 #  Message builders                                                            #
 # --------------------------------------------------------------------------- #
-# Template params are matched by name in the EmailJS template, e.g. {{code}}.
-# Keep these names stable or the emails will render blank variables.
+# Template params are matched by name in the EmailJS template. The browser opens
+# ``action_url``; the code remains hashed, expiring and single-use on the server.
+def account_action_url(user, code, purpose):
+    """Build a frontend link carrying the email and one-time code safely."""
+    query = urllib.parse.urlencode(
+        {"email": user.email, "code": code, "purpose": purpose}
+    )
+    return f"{settings.SITE_URL.rstrip('/')}/account?{query}"
+
+
 def send_verification_code(user, code):
-    """Send the 6-digit sign-up code."""
+    """Email the secure sign-up verification link."""
     name = user.first_name or user.username
     return send_template(
         settings.EMAILJS_TEMPLATE_VERIFY,
         {
             "to_email": user.email,
             "to_name": name,
-            "code": code,
-            "expiry_minutes": settings.VERIFICATION_CODE_TTL_MINUTES,
+            "action_url": account_action_url(user, code, "verify"),
             "site_url": settings.SITE_URL,
         },
         to_email=user.email,
@@ -119,15 +134,14 @@ def send_verification_code(user, code):
 
 
 def send_password_reset_code(user, code):
-    """Send the 6-digit password-reset code."""
+    """Email the secure password-reset link."""
     name = user.first_name or user.username
     return send_template(
         settings.EMAILJS_TEMPLATE_RESET or settings.EMAILJS_TEMPLATE_VERIFY,
         {
             "to_email": user.email,
             "to_name": name,
-            "code": code,
-            "expiry_minutes": settings.VERIFICATION_CODE_TTL_MINUTES,
+            "action_url": account_action_url(user, code, "reset"),
             "site_url": settings.SITE_URL,
         },
         to_email=user.email,
