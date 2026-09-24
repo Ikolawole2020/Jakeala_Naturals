@@ -53,6 +53,11 @@ export const addToCart = (body) => api("/cart/add/", { method: "POST", body: JSO
 export const updateCartItem = (body) => api("/cart/update_item/", { method: "POST", body: JSON.stringify(body) });
 export const checkout = (body) => api("/checkout/", { method: "POST", body: JSON.stringify(body) });
 export const getOrders = (email) => api(`/orders/?email=${encodeURIComponent(email)}`);
+export const register = (body) => api("/auth/register/", { method: "POST", body: JSON.stringify(body) });
+export const login = (body) => api("/auth/login/", { method: "POST", body: JSON.stringify(body) });
+export const verifyEmail = (body) => api("/auth/verify-email/", { method: "POST", body: JSON.stringify(body) });
+export const requestPasswordReset = (body) => api("/auth/password/reset/", { method: "POST", body: JSON.stringify(body) });
+export const confirmPasswordReset = (body) => api("/auth/password/reset/confirm/", { method: "POST", body: JSON.stringify(body) });
 export const subscribe = (email) => api("/newsletter/", { method: "POST", body: JSON.stringify({ email }) });
 export const sendContact = (body) => api("/contact/", { method: "POST", body: JSON.stringify(body) });
 
