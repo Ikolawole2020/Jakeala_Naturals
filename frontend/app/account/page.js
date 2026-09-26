@@ -7,9 +7,10 @@ const TOKEN_KEY = "jn_customer_token";
 
 export default function AccountPage() {
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ full_name: "", email: "", password: "", code: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", password: "" });
   const [user, setUser] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [lookupEmail, setLookupEmail] = useState("");
@@ -17,10 +18,28 @@ export default function AccountPage() {
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
-    api("/auth/me/", { headers: { Authorization: `Token ${token}` } })
-      .then(setUser)
-      .catch(() => localStorage.removeItem(TOKEN_KEY));
+    if (token) {
+      api("/auth/me/", { headers: { Authorization: `Token ${token}` } })
+        .then(setUser)
+        .catch(() => localStorage.removeItem(TOKEN_KEY));
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email");
+    const code = params.get("code");
+    const purpose = params.get("purpose");
+    if (email && code && purpose === "verify") {
+      setVerifying(true);
+      setMode("login");
+      verifyEmail({ email, code })
+        .then((data) => {
+          saveSession(data);
+          setMessage("Email verified. You are now signed in.");
+          window.history.replaceState({}, "", "/account");
+        })
+        .catch((err) => setError(readError(err)))
+        .finally(() => setVerifying(false));
+    }
   }, []);
 
   function update(name, value) {
@@ -38,12 +57,11 @@ export default function AccountPage() {
     setBusy(true); setError(""); setMessage("");
     try {
       if (mode === "register") {
-        await register(form);
-        setMessage("Account created. Check your email for the verification link.");
-        setMode("verify");
-      } else if (mode === "verify") {
-        saveSession(await verifyEmail({ email: form.email, code: form.code }));
-        setMessage("Email verified. You are now signed in.");
+        const result = await register(form);
+        setMessage(result.email_sent
+          ? "Account created. Check your email and click the verification link."
+          : "Account created. Email delivery is temporarily unavailable. Please contact support before signing in.");
+        setMode("login");
       } else {
         saveSession(await login({ identifier: form.email, password: form.password }));
         setMessage("Welcome back.");
@@ -69,19 +87,23 @@ export default function AccountPage() {
     <button className="btn btn-ghost" onClick={() => { localStorage.removeItem(TOKEN_KEY); setUser(null); }}>Sign out</button>
   </div>;
 
-  const title = mode === "login" ? "Welcome back" : mode === "register" ? "Create account" : "Verify your email";
+  if (verifying) return <div className="wrap page-hero" style={{ maxWidth: 480 }}>
+    <p className="kicker">Portal</p><h1 className="serif">Verifying your email…</h1>
+    <p className="muted">Please wait while we confirm your account.</p>
+  </div>;
+
+  const title = mode === "login" ? "Welcome back" : "Create account";
   return <div className="wrap page-hero" style={{ maxWidth: 480 }}>
     <p className="kicker">Portal</p><h1 className="serif">{title}</h1>
     <form className="form" onSubmit={submit}>
       {mode === "register" && <input placeholder="Full name" autoComplete="name" required value={form.full_name} onChange={(e) => update("full_name", e.target.value)} />}
       <input type="email" placeholder="Email" autoComplete="email" required value={form.email} onChange={(e) => update("email", e.target.value)} />
-      {mode !== "verify" && <input type="password" placeholder="Password" autoComplete={mode === "login" ? "current-password" : "new-password"} required value={form.password} onChange={(e) => update("password", e.target.value)} />}
-      {mode === "verify" && <input placeholder="Verification code" inputMode="numeric" required value={form.code} onChange={(e) => update("code", e.target.value)} />}
-      <button className="btn btn-dark" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : "Verify email"}</button>
+      <input type="password" placeholder="Password" autoComplete={mode === "login" ? "current-password" : "new-password"} required value={form.password} onChange={(e) => update("password", e.target.value)} />
+      <button className="btn btn-dark" disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>
     </form>
     {error && <p className="alert error" role="alert">{error}</p>}
     {message && <p className="alert" role="status">{message}</p>}
-    {mode !== "verify" && <button className="btn btn-ghost" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); setMessage(""); }}>{mode === "login" ? "Need an account?" : "Already have an account?"}</button>}
+    <button className="btn btn-ghost" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); setMessage(""); }}>{mode === "login" ? "Need an account?" : "Already have an account?"}</button>
     <div style={{ borderTop: "1px solid var(--line)", marginTop: 28, paddingTop: 18 }}>
       <p className="kicker">Track orders</p><h2 className="serif" style={{ fontSize: 24 }}>Look up your past orders</h2>
       <form className="form" onSubmit={track}><input type="email" required placeholder="Order email" value={lookupEmail} onChange={(e) => setLookupEmail(e.target.value)} /><button className="btn btn-primary">Find orders</button></form>
