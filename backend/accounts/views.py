@@ -27,11 +27,16 @@ from rest_framework.response import Response
 
 from config.throttles import AuthThrottle, EmailIPThrottle, EmailThrottle
 
-from .models import Profile, VerificationCode
+from commerce.models import Order
+
+from .models import Address, Profile, VerificationCode
 from .serializers import (
+    AddressSerializer,
     ChangePasswordSerializer,
     EmailCodeSerializer,
     LoginSerializer,
+    MyOrderDetailSerializer,
+    MyOrderListSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     RegisterSerializer,
@@ -250,6 +255,97 @@ def me(request):
         ser.save()
 
     return Response(UserSerializer(request.user).data)
+
+
+def _my_orders(user):
+    """Orders belonging to the signed-in customer.
+
+    A guest who registers an account afterwards still has orders carrying only
+    their email address, so those are included by email too. Without this the
+    dashboard would look empty to a customer who has genuinely paid for things.
+    """
+    return (
+        Order.objects.filter(user=user)
+        | Order.objects.filter(user__isnull=True, email__iexact=user.email)
+    ).distinct()
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_orders(request):
+    """The signed-in customer's own order history, newest first."""
+    orders = _my_orders(request.user).prefetch_related(
+        "items__product", "items"
+    )[:50]
+    return Response(MyOrderListSerializer(orders, many=True).data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_order_detail(request, pk):
+    """One order, only if it belongs to the caller."""
+    order = (
+        _my_orders(request.user)
+        .filter(pk=pk)
+        .prefetch_related("items__product", "items")
+        .first()
+    )
+    if order is None:
+        # 404 rather than 403: a stranger's order should be indistinguishable
+        # from one that never existed.
+        return Response(
+            {"detail": "We could not find that order on your account."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    return Response(MyOrderDetailSerializer(order).data)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def my_addresses(request):
+    """List or create a saved delivery address."""
+    if request.method == "POST":
+        ser = AddressSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        # The owner is taken from the session, never from the payload, so a
+        # crafted request cannot write an address into somebody else's account.
+        address = ser.save(user=request.user)
+        return Response(
+            AddressSerializer(address).data, status=status.HTTP_201_CREATED
+        )
+    addresses = Address.objects.filter(user=request.user)
+    return Response(AddressSerializer(addresses, many=True).data)
+
+
+@api_view(["GET", "PATCH", "DELETE"])
+@permission_classes([IsAuthenticated])
+def my_address(request, pk):
+    """Read, edit, default-pick or delete one saved address."""
+    address = Address.objects.filter(user=request.user, pk=pk).first()
+    if address is None:
+        return Response(
+            {"detail": "That address was not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if request.method == "GET":
+        return Response(AddressSerializer(address).data)
+
+    if request.method == "DELETE":
+        was_default = address.is_default
+        address.delete()
+        if was_default:
+            # Promote another address so the customer is never left with none.
+            nxt = Address.objects.filter(user=request.user).first()
+            if nxt is not None:
+                nxt.is_default = True
+                nxt.save(update_fields=["is_default"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    ser = AddressSerializer(address, data=request.data, partial=True)
+    ser.is_valid(raise_exception=True)
+    ser.save()
+    return Response(ser.data)
 
 
 @api_view(["POST"])

@@ -11,6 +11,10 @@ urlpatterns = [
     path("auth/login/", views.login, name="auth-login"),
     path("auth/logout/", views.logout, name="auth-logout"),
     path("auth/me/", views.me, name="auth-me"),
+    path("auth/me/orders/", views.my_orders, name="auth-my-orders"),
+    path("auth/me/orders/<int:pk>/", views.my_order_detail, name="auth-my-order"),
+    path("auth/me/addresses/", views.my_addresses, name="auth-my-addresses"),
+    path("auth/me/addresses/<int:pk>/", views.my_address, name="auth-my-address"),
     path("auth/password/change/", views.change_password, name="auth-password-change"),
     path("auth/password/reset/", views.password_reset_request, name="auth-password-reset"),
     path(

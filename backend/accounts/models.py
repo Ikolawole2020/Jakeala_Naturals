@@ -44,6 +44,66 @@ class Profile(models.Model):
         return f"Profile for {self.user.username}"
 
 
+class Address(models.Model):
+    """A saved delivery address, owned by exactly one customer.
+
+    Orders keep their own copy of the address they shipped to (a snapshot taken at
+    checkout), so editing or deleting a saved address here never rewrites the
+    delivery record of a past order.
+    """
+
+    HOME = "home"
+    WORK = "work"
+    OTHER = "other"
+    LABEL_CHOICES = [
+        (HOME, "Home"),
+        (WORK, "Work"),
+        (OTHER, "Other"),
+    ]
+
+    user = models.ForeignKey(
+        User, related_name="addresses", on_delete=models.CASCADE
+    )
+    label = models.CharField(max_length=20, choices=LABEL_CHOICES, default=HOME)
+    full_name = models.CharField(max_length=140)
+    phone = models.CharField(max_length=40)
+    line1 = models.CharField(max_length=240)
+    line2 = models.CharField(max_length=240, blank=True)
+    city = models.CharField(max_length=80)
+    state = models.CharField(max_length=80)
+    country = models.CharField(max_length=80, default="Nigeria")
+    is_default = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "addresses"
+        ordering = ["-is_default", "-created_at"]
+
+    def __str__(self):
+        return f"{self.get_label_display()} - {self.full_name} ({self.city})"
+
+    def save(self, *args, **kwargs):
+        """Keep at most one default per customer.
+
+        Without this, two rows could both claim to be the default and checkout
+        would have no way to choose between them.
+        """
+        super().save(*args, **kwargs)
+        if self.is_default:
+            Address.objects.filter(user=self.user).exclude(pk=self.pk).update(
+                is_default=False
+            )
+        elif not Address.objects.filter(user=self.user, is_default=True).exists():
+            # First address saved becomes the default automatically, so a customer
+            # who adds one address is never left with "none selected". The flag is
+            # set with a queryset update to avoid recursing back through this
+            # method, so the in-memory copy is refreshed here - otherwise the API
+            # would answer "is_default: false" for an address it just promoted.
+            Address.objects.filter(pk=self.pk).update(is_default=True)
+            self.is_default = True
+
+
 class VerificationCode(models.Model):
     """A one-time code sent by email for sign-up or password reset."""
 

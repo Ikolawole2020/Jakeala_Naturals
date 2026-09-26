@@ -2,7 +2,29 @@
 
 from django.contrib import admin
 
-from .models import Profile, VerificationCode
+from .models import Address, Profile, VerificationCode
+
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    """Read-only view of customer delivery addresses.
+
+    A saved address is a convenience for the customer, not a system of record -
+    each order keeps its own copy - so staff can inspect them but not create or
+    edit them here.
+    """
+
+    list_display = ("full_name", "phone", "city", "state", "label", "is_default", "user")
+    list_filter = ("label", "is_default")
+    search_fields = ("user__email", "full_name", "phone", "line1", "city", "state")
+    list_select_related = ("user",)
+    readonly_fields = tuple(f.name for f in Address._meta.fields)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Profile)

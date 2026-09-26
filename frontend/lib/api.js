@@ -38,7 +38,11 @@ export async function api(path, options = {}) {
     const text = await res.text();
     throw new Error(text || res.statusText);
   }
-  return res.json();
+  // DELETE endpoints answer 204 with no body and JSON.parse("") throws, so an
+  // empty response is reported as null rather than being read as a failure.
+  if (res.status === 204) return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 export const getCategories = () => api("/categories/");
@@ -58,6 +62,56 @@ export const login = (body) => api("/auth/login/", { method: "POST", body: JSON.
 export const verifyEmail = (body) => api("/auth/verify-email/", { method: "POST", body: JSON.stringify(body) });
 export const requestPasswordReset = (body) => api("/auth/password/reset/", { method: "POST", body: JSON.stringify(body) });
 export const confirmPasswordReset = (body) => api("/auth/password/reset/confirm/", { method: "POST", body: JSON.stringify(body) });
+
+// --------------------------------------------------------------------------- //
+// Customer session                                                              //
+// --------------------------------------------------------------------------- //
+// The token lives in localStorage because the storefront is a static Next.js
+// site talking to a separate API origin: there is no server-side cookie to set.
+// The backend's tokens expire (AUTH_TOKEN_TTL) and are burned on use, so a
+// stale one clears the session rather than lingering.
+const TOKEN_KEY = "jn_customer_token";
+
+export function customerToken() {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setCustomerToken(token) {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearCustomerToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+function authed(path, options = {}) {
+  const token = customerToken();
+  return api(path, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      ...(token ? { Authorization: `Token ${token}` } : {}),
+    },
+  });
+}
+
+export const me = () => authed("/auth/me/");
+export const updateMe = (body) =>
+  authed("/auth/me/", { method: "PATCH", body: JSON.stringify(body) });
+export const changePassword = (body) =>
+  authed("/auth/password/change/", { method: "POST", body: JSON.stringify(body) });
+
+export const myOrders = () => authed("/auth/me/orders/");
+export const myOrder = (id) => authed(`/auth/me/orders/${id}/`);
+
+export const myAddresses = () => authed("/auth/me/addresses/");
+export const createAddress = (body) =>
+  authed("/auth/me/addresses/", { method: "POST", body: JSON.stringify(body) });
+export const updateAddress = (id, body) =>
+  authed(`/auth/me/addresses/${id}/`, { method: "PATCH", body: JSON.stringify(body) });
+export const deleteAddress = (id) =>
+  authed(`/auth/me/addresses/${id}/`, { method: "DELETE" });
 export const subscribe = (email) => api("/newsletter/", { method: "POST", body: JSON.stringify({ email }) });
 export const sendContact = (body) => api("/contact/", { method: "POST", body: JSON.stringify(body) });
 

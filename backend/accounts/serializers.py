@@ -5,7 +5,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from rest_framework import serializers
 
-from .models import Profile
+from commerce.models import Order, OrderItem
+
+from .models import Address, Profile
 
 User = get_user_model()
 
@@ -34,6 +36,98 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ("phone", "marketing_opt_in", "email_verified")
         read_only_fields = ("email_verified",)
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    """A saved delivery address. The owner comes from the request, never input."""
+
+    label_display = serializers.CharField(source="get_label_display", read_only=True)
+
+    class Meta:
+        model = Address
+        fields = (
+            "id",
+            "label",
+            "label_display",
+            "full_name",
+            "phone",
+            "line1",
+            "line2",
+            "city",
+            "state",
+            "country",
+            "is_default",
+        )
+        read_only_fields = ("id",)
+
+    def validate_line1(self, value):
+        if not (value or "").strip():
+            raise serializers.ValidationError("Enter the street address.")
+        return value.strip()
+
+
+class MyOrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ("product_name", "sku", "quantity", "unit_price", "subscribe")
+
+
+class MyOrderListSerializer(serializers.ModelSerializer):
+    """One row in the customer's own order history.
+
+    The full delivery address is withheld here - the list view only needs the town
+    so the customer can recognise an order at a glance. ``MyOrderDetailSerializer``
+    shows the whole thing, and both are scoped to the signed-in user.
+    """
+
+    reference = serializers.CharField(source="payment_reference", read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    item_count = serializers.IntegerField(source="items.count", read_only=True)
+    thumbnail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = (
+            "id",
+            "reference",
+            "status",
+            "status_display",
+            "total",
+            "item_count",
+            "city",
+            "state",
+            "paid_at",
+            "created_at",
+            "thumbnail",
+        )
+
+    def get_thumbnail(self, obj):
+        """First item's product image, so the row shows what was actually bought."""
+        for item in obj.items.select_related("product").all():
+            product = item.product
+            if product is not None and product.image:
+                try:
+                    return product.image.url
+                except ValueError:  # no file on disk
+                    return ""
+        return ""
+
+
+class MyOrderDetailSerializer(MyOrderListSerializer):
+    items = MyOrderItemSerializer(many=True, read_only=True)
+
+    class Meta(MyOrderListSerializer.Meta):
+        fields = MyOrderListSerializer.Meta.fields + (
+            "items",
+            "full_name",
+            "email",
+            "phone",
+            "address",
+            "city",
+            "state",
+            "country",
+            "notes",
+        )
 
 
 class UserSerializer(serializers.ModelSerializer):
