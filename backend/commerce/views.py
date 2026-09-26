@@ -286,6 +286,18 @@ def reuse_or_create_order(data, cart_key, user, subtotal, shipping, total, items
     return order
 
 
+def payments_configured():
+    """True when a real payment gateway is set up.
+
+    Checkout consults this to decide whether an order may be settled on the spot.
+    With no keys the store is running pay-on-fulfilment, so the basket is emptied
+    as part of placing the order; with keys present the basket waits for a
+    verified payment. Keeping the check in one place means switching Paystack on
+    cannot leave the shortcut quietly enabled.
+    """
+    return bool(settings.PAYSTACK_SECRET_KEY and settings.PAYSTACK_PUBLIC_KEY)
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @throttle_classes([CheckoutThrottle])
@@ -330,11 +342,36 @@ def checkout(request):
     with transaction.atomic():
         order = reuse_or_create_order(data, key, user, subtotal, shipping, total, items)
 
-    logger.info("Order %s created (pending) for %s", order.pk, order.email)
+    # With a real gateway the basket is deliberately left alone here: the order
+    # stays pending and the basket is emptied only once Paystack confirms the
+    # money arrived, so an abandoned checkout does not lose the shopper's basket.
+    #
+    # That safety net has a gap while no gateway is configured. The order is
+    # created, the shopper is told it succeeded, and the basket then stays full
+    # forever, because the only thing that clears it is a payment that will never
+    # arrive. In that state the store is running pay-on-fulfilment, so the order is
+    # settled here instead and the basket is emptied as the shopper expects.
+    # Keyed off the real keys, so this disappears the moment Paystack is switched
+    # on and cannot silently bypass payment once it is.
+    if not payments_configured():
+        from payments.paystack import amount_in_kobo
+        from payments.services import settle_order
+
+        with transaction.atomic():
+            settle_order(
+                order,
+                reference=f"DEMO{order.pk}",
+                amount_kobo=amount_in_kobo(order.total),
+                source="checkout (no gateway configured)",
+            )
+        order.refresh_from_db()
+        logger.info("Order %s settled without a gateway; basket emptied.", order.pk)
+
+    logger.info("Order %s created for %s", order.pk, order.email)
     return Response(
         {
             "order": OrderPublicSerializer(order).data,
-            "payment_required": order.total > 0,
+            "payment_required": order.total > 0 and payments_configured(),
         },
         status=status.HTTP_201_CREATED,
     )

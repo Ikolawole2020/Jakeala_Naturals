@@ -13,7 +13,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from catalog.models import Category, Product
-from commerce.models import Cart, Order
+from commerce.models import Cart, CartItem, Order
 
 User = get_user_model()
 
@@ -171,7 +171,17 @@ class CheckoutTests(CommerceBase):
         self.assertEqual(response.status_code, 409)
 
     def test_order_starts_pending_not_paid(self):
-        response, _ = self.checkout()
+        """With a gateway configured the order must wait for the money.
+
+        Without keys the store runs pay-on-fulfilment and settles at checkout; see
+        BasketClearedAtCheckoutTests. This asserts the path that matters once
+        Paystack is live: no money, no paid order.
+        """
+        with self.settings(
+            PAYSTACK_SECRET_KEY="sk_test_x", PAYSTACK_PUBLIC_KEY="pk_test_x"
+        ):
+            response, _ = self.checkout()
+
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["order"]["status"], "pending")
 
@@ -225,11 +235,26 @@ class CheckoutTests(CommerceBase):
         self.assertEqual(response.status_code, 409)
         self.assertFalse(Order.objects.exists())
 
-    def test_pressing_place_order_twice_reuses_the_pending_order(self):
+    def test_pressing_place_order_twice_never_creates_two_orders(self):
+        """Double submission must not double-charge or double-ship.
+
+        With a gateway the order stays pending and the basket survives, so the
+        second press reuses the same order. Without one, the basket is emptied by
+        the first press, so the second is refused outright. Both must leave
+        exactly one order behind.
+        """
+        with self.settings(
+            PAYSTACK_SECRET_KEY="sk_test_x", PAYSTACK_PUBLIC_KEY="pk_test_x"
+        ):
+            first, key = self.checkout()
+            second, _ = self.checkout(session=key)
+            self.assertEqual(first.data["order"]["id"], second.data["order"]["id"])
+
+        # Pay-on-fulfilment: the basket went with the first order.
         first, key = self.checkout()
         second, _ = self.checkout(session=key)
-
-        self.assertEqual(first.data["order"]["id"], second.data["order"]["id"])
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 409)
         self.assertEqual(Order.objects.count(), 1)
 
     def test_order_is_linked_to_the_matching_account(self):
@@ -244,8 +269,59 @@ class CheckoutTests(CommerceBase):
         self.assertIsNone(Order.objects.get().user_id)
 
     def test_basket_is_kept_until_payment_succeeds(self):
-        _, key = self.checkout()
-        self.assertEqual(self.get_cart(key).data["item_count"], 1)
+        """The Paystack path: nothing has been paid, so nothing is lost."""
+        with self.settings(
+            PAYSTACK_SECRET_KEY="sk_test_x", PAYSTACK_PUBLIC_KEY="pk_test_x"
+        ):
+            _, key = self.checkout()
+            self.assertEqual(self.get_cart(key).data["item_count"], 1)
+
+
+class BasketClearedAtCheckoutTests(CommerceBase):
+    """A basket must not survive a completed checkout.
+
+    The basket is normally emptied only when a verified payment arrives, so an
+    abandoned Paystack attempt does not lose the shopper's shopping. That left a
+    real gap while no gateway was configured: the order was created, the shopper
+    was told it worked, and the basket stayed full forever, because the payment
+    that would have cleared it never arrived.
+    """
+
+    def checkout(self, session):
+        return self.client.post(
+            "/api/checkout/",
+            {
+                "session_key": session,
+                "email": "shopper@example.com",
+                "full_name": "A Shopper",
+                "address": "1 Test Street",
+                "city": "Lagos",
+                "state": "Lagos",
+            },
+            format="json",
+        )
+
+    def test_basket_is_emptied_when_no_gateway_is_configured(self):
+        key = self.add_to_cart(quantity=2).data["session_key"]
+        res = self.checkout(key)
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(CartItem.objects.filter(cart__session_key=key).count(), 0)
+        self.assertEqual(res.data["order"]["status"], "paid")
+        self.assertFalse(res.data["payment_required"])
+
+    def test_basket_survives_while_a_gateway_is_configured(self):
+        """With keys present the order stays pending and keeps the basket, so an
+        abandoned payment attempt can be retried without rebuilding it."""
+        with self.settings(
+            PAYSTACK_SECRET_KEY="sk_test_x", PAYSTACK_PUBLIC_KEY="pk_test_x"
+        ):
+            key = self.add_to_cart(quantity=1).data["session_key"]
+            res = self.checkout(key)
+
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data["order"]["status"], "pending")
+        self.assertTrue(res.data["payment_required"])
+        self.assertEqual(CartItem.objects.filter(cart__session_key=key).count(), 1)
 
 
 class OrderPrivacyTests(CommerceBase):
