@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { myAddresses, myOrders } from "@/lib/api";
+import { imageUrl, myAddresses, myOrders } from "@/lib/api";
 import ProfilePanel from "./ProfilePanel";
 import SecurityPanel from "./SecurityPanel";
 import OrdersPanel from "./OrdersPanel";
@@ -199,7 +199,7 @@ function Overview({ orders, addresses, onOpenOrders, onShop }) {
       <ul className="order-list">
         {recent.map((o) => (
           <li key={o.id} className="order-row">
-            {o.thumbnail ? <img className="order-thumb" src={o.thumbnail} alt="" /> : null}
+            {o.thumbnail ? <img className="order-thumb" src={imageUrl(o.thumbnail)} alt="" /> : null}
             <div className="order-row-main">
               <p className="order-ref">
                 Order #{o.id}

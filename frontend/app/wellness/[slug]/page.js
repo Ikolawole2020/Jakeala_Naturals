@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getArticle } from "@/lib/api";
+import { getArticle, imageUrl } from "@/lib/api";
 import { SITE_NAME, SITE_URL, siteUrl } from "@/lib/site";
 
 const FALLBACK_ARTICLES = {
@@ -68,7 +68,7 @@ export default async function ArticlePage({ params }) {
       <p className="muted" style={{ fontSize: 17 }}>{a.excerpt}</p>
       {a.cover && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={a.cover} alt="" style={{ borderRadius: 22, marginTop: 22, width: "100%", aspectRatio: "2 / 1", objectFit: "cover" }} />
+        <img src={imageUrl(a.cover)} alt="" style={{ borderRadius: 22, marginTop: 22, width: "100%", aspectRatio: "2 / 1", objectFit: "cover" }} />
       )}
       <div className="policy" style={{ marginTop: 28 }}>
         <p>{a.body}</p>

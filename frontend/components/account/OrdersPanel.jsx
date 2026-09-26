@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { myOrder } from "@/lib/api";
+import { imageUrl, myOrder } from "@/lib/api";
 import { StatusPill } from "./Dashboard";
 
 /**
@@ -69,7 +69,7 @@ export default function OrdersPanel({ orders }) {
               onClick={() => toggle(o)}
               aria-expanded={openId === o.id}
             >
-              {o.thumbnail ? <img className="order-thumb" src={o.thumbnail} alt="" /> : null}
+              {o.thumbnail ? <img className="order-thumb" src={imageUrl(o.thumbnail)} alt="" /> : null}
               <div className="order-row-main">
                 <p className="order-ref">
                   Order #{o.id}
