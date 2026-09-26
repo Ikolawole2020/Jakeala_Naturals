@@ -24,18 +24,43 @@ export default function Dashboard({ user, onUserChange, onSignOut }) {
 
   async function loadAll() {
     setLoading(true);
-    try {
-      // Both calls are independent, so they are issued together rather than in
-      // sequence - the Overview counts need a number from each.
-      const [o, a] = await Promise.all([myOrders(), myAddresses()]);
-      setOrders(o || []);
-      setAddresses(a || []);
-      setError("");
-    } catch {
-      setError("We could not load your account just now. Please refresh.");
-    } finally {
-      setLoading(false);
+    // Settled, not Promise.all: with all() a single failing request blanked the
+    // entire dashboard and replaced the real reason with a generic message, so
+    // an address-book hiccup made the order history look broken too. Each panel
+    // now loads independently and the message names what actually failed.
+    const [ordersResult, addressesResult] = await Promise.allSettled([
+      myOrders(),
+      myAddresses(),
+    ]);
+
+    const problems = [];
+
+    if (ordersResult.status === "fulfilled") {
+      setOrders(ordersResult.value || []);
+    } else {
+      setOrders([]);
+      problems.push("your orders");
     }
+
+    if (addressesResult.status === "fulfilled") {
+      setAddresses(addressesResult.value || []);
+    } else {
+      setAddresses([]);
+      problems.push("your addresses");
+    }
+
+    if (problems.length === 0) {
+      setError("");
+    } else if (problems.length === 2) {
+      setError(
+        "We could not reach the store just now. Check your connection and refresh."
+      );
+    } else {
+      setError(
+        `We could not load ${problems.join(" and ")} just now. The rest of your account is fine - please refresh.`
+      );
+    }
+    setLoading(false);
   }
 
   useEffect(() => {
