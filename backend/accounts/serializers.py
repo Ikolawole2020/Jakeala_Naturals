@@ -1,5 +1,7 @@
 """Serializers for registration, sign-in, verification and profile edits."""
 
+import logging
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
@@ -10,6 +12,8 @@ from commerce.models import Order, OrderItem
 from .models import Address, Profile
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 def username_from_email(email):
@@ -102,14 +106,26 @@ class MyOrderListSerializer(serializers.ModelSerializer):
         )
 
     def get_thumbnail(self, obj):
-        """First item's product image, so the row shows what was actually bought."""
-        for item in obj.items.select_related("product").all():
-            product = item.product
-            if product is not None and product.image:
-                try:
-                    return product.image.url
-                except ValueError:  # no file on disk
-                    return ""
+        """First item's product image, so the row shows what was actually bought.
+
+        Deliberately total. A single unreadable image field, a product row that no
+        longer resolves, or a missing media root must not turn the whole order
+        list into a 500 - the dashboard is the page a customer opens to find out
+        what happened to their money, so it needs to render even when one row is
+        odd. The failure is logged rather than swallowed silently.
+        """
+        try:
+            for item in obj.items.select_related("product").all():
+                product = item.product
+                if product is not None and product.image:
+                    try:
+                        return product.image.url
+                    except ValueError:  # name set, no file on disk
+                        continue
+        except Exception:
+            logger.exception(
+                "Could not read a thumbnail for order id=%s", getattr(obj, "id", "?")
+            )
         return ""
 
 
