@@ -108,24 +108,19 @@ class MyOrderListSerializer(serializers.ModelSerializer):
     def get_thumbnail(self, obj):
         """First item's product image, so the row shows what was actually bought.
 
-        Deliberately total. A single unreadable image field, a product row that no
-        longer resolves, or a missing media root must not turn the whole order
-        list into a 500 - the dashboard is the page a customer opens to find out
-        what happened to their money, so it needs to render even when one row is
-        odd. The failure is logged rather than swallowed silently.
+        ``Product.image`` is a CharField holding either an absolute URL or a
+        site-relative path such as ``/media/products/cycle-reset-tea.jpg`` - it is
+        not a Django file field, so there is no ``.url`` attribute to read.
+        Treating it as one raised AttributeError on every order that had a
+        picture, which returned a 500 and emptied the customer's whole order
+        history. The value is returned exactly as stored; the front end's
+        imageUrl() resolves a relative path against the API origin, as it does
+        everywhere else in the storefront.
         """
-        try:
-            for item in obj.items.select_related("product").all():
-                product = item.product
-                if product is not None and product.image:
-                    try:
-                        return product.image.url
-                    except ValueError:  # name set, no file on disk
-                        continue
-        except Exception:
-            logger.exception(
-                "Could not read a thumbnail for order id=%s", getattr(obj, "id", "?")
-            )
+        for item in obj.items.select_related("product").all():
+            product = item.product
+            if product is not None and product.image:
+                return product.image
         return ""
 
 

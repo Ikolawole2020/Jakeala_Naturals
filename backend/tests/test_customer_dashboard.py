@@ -82,6 +82,42 @@ class MyOrdersTests(TestCase):
         self.assertEqual(res.status_code, 404)
         self.assertNotIn("address", res.json())
 
+    def test_order_with_a_product_image_returns_a_thumbnail(self):
+        """Regression: Product.image is a CharField, not a file field.
+
+        Reading ``product.image.url`` raised AttributeError, which 500'd the whole
+        list - so a customer with any pictured order saw no order history at all.
+        """
+        from catalog.models import Category, Product
+
+        category = Category.objects.create(name="Tea", slug="tea")
+        product = Product.objects.create(
+            name="Cycle Reset Tea",
+            slug="cycle-reset-tea",
+            sku="TEA-IMG",
+            price=Decimal("3750"),
+            image="/media/products/cycle-reset-tea.jpg",
+            category=category,
+        )
+        OrderItem.objects.create(
+            order=self.mine,
+            product=product,
+            product_name="Cycle Reset Tea",
+            sku="TEA-IMG",
+            quantity=1,
+            unit_price=Decimal("3750"),
+        )
+
+        rows = self.client.get("/api/auth/me/orders/").json()
+        row = next(r for r in rows if r["id"] == self.mine.id)
+        self.assertEqual(row["thumbnail"], "/media/products/cycle-reset-tea.jpg")
+
+    def test_order_without_an_image_still_lists(self):
+        """An order whose product row is gone still renders, with no thumbnail."""
+        rows = self.client.get("/api/auth/me/orders/").json()
+        row = next(r for r in rows if r["id"] == self.mine.id)
+        self.assertEqual(row["thumbnail"], "")
+
 
 class AddressBookTests(TestCase):
     def setUp(self):
