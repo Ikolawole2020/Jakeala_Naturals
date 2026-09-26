@@ -214,9 +214,36 @@ h1, h2, h3, .serif {
 .line img { width: 72px; height: 72px; object-fit: cover; border-radius: 12px; }
 
 .page-hero { padding: 48px 0 20px; }
-.form { display: grid; gap: 12px; }
+/* Forms on the public pages (contact, wholesale, checkout).
+   These are the same primitives as the account forms, restated rather than
+   inherited: the account area is scoped with `acct-` because its panels carry
+   extra rules, and without a matched pair the two drifted apart - the account
+   fields ended up looking finished while these looked like raw skeletons. */
+.form { display: grid; gap: 14px; }
 .form input, .form textarea, .form select {
-  width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #fff;
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.form textarea { resize: vertical; min-height: 110px; }
+.form input::placeholder, .form textarea::placeholder { color: #9aab9d; }
+.form input:hover, .form textarea:hover, .form select:hover { border-color: #b9cdbd; }
+.form input:focus, .form textarea:focus, .form select:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(82, 128, 90, .18);
+}
+.form-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.form-2 > .full { grid-column: 1 / -1; }
+@media (max-width: 620px) {
+  .form-2 { grid-template-columns: 1fr; }
 }
 .alert { background: var(--green-mist); color: var(--green-deep); padding: 12px 14px; border-radius: 12px; }
 
@@ -352,7 +379,86 @@ h1, h2, h3, .serif {
 .admin-select { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 10px; color: var(--ink); }
 
 /* ========================================================================== *
- * Account: signed-out auth panel
+ * Account - shared form primitives
+ * --------------------------------------------------------------------------
+ * One definition serves the auth panel, the address form, the profile form and
+ * the password form. They previously each had their own near-duplicate block,
+ * which is how the address and security forms ended up looking skeletal while
+ * the sign-in page looked finished: a later rule silently overrode an earlier
+ * one, and nothing in the cascade explained it.
+ * ========================================================================== */
+.acct-form { display: grid; gap: 16px; }
+.acct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+.acct-grid > .full { grid-column: 1 / -1; }
+
+.acct-field { display: grid; gap: 7px; min-width: 0; }
+.acct-field > span { font-size: 13px; font-weight: 650; color: var(--ink-soft); }
+/* Inputs, selects and textareas are styled together so a form never mixes a
+   polished field with a default-looking one. */
+.acct-field input,
+.acct-field select,
+.acct-field textarea {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.acct-field textarea { resize: vertical; min-height: 96px; }
+.acct-field input:hover,
+.acct-field select:hover,
+.acct-field textarea:hover { border-color: #b9cdbd; }
+.acct-field input:focus,
+.acct-field select:focus,
+.acct-field textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(82, 128, 90, .18);
+}
+.acct-field input[readonly],
+.acct-field input:disabled {
+  background: #f3f5f3;
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+.acct-field input::placeholder { color: #9aab9d; }
+.acct-hint { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+
+.acct-check { display: flex; gap: 11px; align-items: flex-start; font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+.acct-check input { margin-top: 2px; width: 17px; height: 17px; accent-color: var(--green); flex: none; }
+
+.acct-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.acct-actions .btn { margin: 0; }
+
+.acct-section {
+  margin-top: 26px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.acct-section > h3 { margin: 0 0 4px; font-size: 21px; }
+.acct-section > .acct-hint { margin: 0 0 18px; }
+
+.acct-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 24px 0 20px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.acct-divider::before,
+.acct-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+
+/* ========================================================================== *
+ * Account - signed-out auth panel
  * ========================================================================== */
 .auth {
   display: grid;
@@ -365,10 +471,8 @@ h1, h2, h3, .serif {
   max-width: 940px;
   margin: 0 auto;
 }
-
 /* A dark green column so the sign-in page reads as a deliberate destination
-   rather than a bare stack of inputs. All type stays white/cream for contrast
-   against --green-deep. */
+   rather than a bare stack of inputs. Type stays white/cream for contrast. */
 .auth-brand {
   background: linear-gradient(160deg, var(--green-deep) 0%, #2c4a32 100%);
   color: #fff;
@@ -382,13 +486,7 @@ h1, h2, h3, .serif {
 .auth-brand h2 { font-size: 32px; line-height: 1.15; margin: 0; }
 .auth-brand .muted { color: #d6e4d9; font-size: 15px; line-height: 1.65; }
 .auth-points { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
-.auth-points li {
-  position: relative;
-  padding-left: 26px;
-  font-size: 14px;
-  color: #e8f1ea;
-  line-height: 1.5;
-}
+.auth-points li { position: relative; padding-left: 26px; font-size: 14px; color: #e8f1ea; line-height: 1.5; }
 /* A drawn tick rather than a list marker: it survives the dark background and
    costs no image request. */
 .auth-points li::before {
@@ -402,34 +500,11 @@ h1, h2, h3, .serif {
   border-bottom: 2px solid var(--gold);
   transform: rotate(-45deg);
 }
-
 .auth-form-wrap { padding: 42px 38px; }
 .auth-form-wrap h1 { font-size: 30px; margin: 0 0 6px; }
-.auth-form-wrap .form { display: grid; gap: 14px; }
-
-.field { display: grid; gap: 6px; }
-.field > span { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
-.field input {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 14px;
-  background: #fff;
-  color: var(--ink);
-  font: inherit;
-  transition: border-color .15s ease, box-shadow .15s ease;
-}
-.field input:focus {
-  outline: none;
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(82, 128, 90, .16);
-}
-.field-hint { font-size: 12px; margin-top: 4px; }
-
-.btn-block { width: 100%; }
 
 .auth-switch {
-  margin-top: 20px;
+  margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
   display: flex;
@@ -437,6 +512,7 @@ h1, h2, h3, .serif {
   gap: 8px 20px;
   justify-content: center;
 }
+.btn-block { width: 100%; }
 .linkish {
   background: none;
   border: 0;
@@ -450,22 +526,8 @@ h1, h2, h3, .serif {
 .linkish:hover { text-decoration: underline; }
 .linkish.danger { color: #b03a2b; }
 
-
-.admin-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
-.admin-stat { background: var(--green-leaf); border: 1px solid var(--line); border-radius: 16px; padding: 16px; text-align: center; }
-.admin-stat .admin-stat-value { font-size: 26px; font-weight: 700; color: var(--green-deep); font-family: Fraunces, serif; }
-.admin-stat.warn { background: #fdf1de; color: #7a4a0e; }
-.admin-order-items { padding-left: 18px; }
-.admin-order-items li { margin: 4px 0; }
-
-@media (max-width: 760px) {
-  .admin-stats { grid-template-columns: 1fr 1fr; }
-  .admin-form-grid { grid-template-columns: 1fr; }
-  .admin-table { font-size: 13px; }
-}
-
 /* ========================================================================== *
- * Account: signed-in dashboard
+ * Account - signed-in dashboard
  * ========================================================================== */
 .dash-head {
   display: flex;
@@ -512,22 +574,6 @@ h1, h2, h3, .serif {
 .dash-tabs button {
   background: none;
   border: 0;
-  border-bottom: 2px solid transparent;
-  padding: 12px 16px;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.dash-tabs button:hover { color: var(--ink); }
-.dash-tabs button.on { color: var(--green-deep); border-bottom-color: var(--green); }
-
-.dash-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 28px; }
-.dash-panel-head {
-  display: flex;
-  align-items: baseline;
 
 /* Orders */
 .order-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
@@ -565,7 +611,7 @@ h1, h2, h3, .serif {
 }
 
 /* Addresses */
-.addr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.addr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 14px; }
 .addr-card {
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -579,33 +625,16 @@ h1, h2, h3, .serif {
 .addr-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--green-deep); }
 .addr-name { margin: 0; font-weight: 650; }
 .addr-card p { margin: 0; line-height: 1.55; }
+.addr-card .addr-actions { margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
 
-.addr-form { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 22px; }
-.addr-form h3 { margin: 0 0 16px; }
-.addr-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.addr-fields label { display: grid; gap: 6px; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
-.addr-fields label.span-2 { grid-column: 1 / -1; }
-.addr-fields input, .addr-fields select {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 11px 12px;
-  background: #fff;
-  color: var(--ink);
-  font: inherit;
-  font-weight: 400;
+.meta-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--line);
 }
-.addr-fields input:focus, .addr-fields select:focus {
-  outline: none;
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(82, 128, 90, .16);
-}
-.addr-fields input[readonly] { background: #f4f6f4; color: var(--ink-soft); }
-.addr-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
-
-.check-row { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; font-size: 14px; color: var(--ink-soft); }
-
-.meta-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin: 24px 0 0; }
 .meta-list dt { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
 .meta-list dd { margin: 4px 0 0; font-weight: 600; }
 
@@ -620,11 +649,32 @@ h1, h2, h3, .serif {
   .auth-form-wrap { padding: 30px 24px; }
   .dash-stats { grid-template-columns: 1fr 1fr; }
   .order-detail-grid { grid-template-columns: 1fr; gap: 16px; }
-  .addr-fields { grid-template-columns: 1fr; }
+  .acct-grid { grid-template-columns: 1fr; }
   .order-row { flex-wrap: wrap; }
   .order-row-end { width: 100%; justify-content: space-between; }
 }
+@media (max-width: 520px) {
+  .dash-stats { grid-template-columns: 1fr; }
+  .dash-panel { padding: 20px 16px; }
+  .addr-grid { grid-template-columns: 1fr; }
+}
 
+  border-bottom: 2px solid transparent;
+  padding: 12px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dash-tabs button:hover { color: var(--ink); }
+.dash-tabs button.on { color: var(--green-deep); border-bottom-color: var(--green); }
+
+.dash-panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 28px; }
+.dash-panel-head {
+  display: flex;
+  align-items: baseline;
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;

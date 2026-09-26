@@ -51,9 +51,9 @@ export default function ProfilePanel({ user, onSaved }) {
       {error && <p className="alert error">{error}</p>}
       {notice && <p className="alert admin-ok">{notice}</p>}
 
-      <form className="addr-form" onSubmit={save}>
-        <div className="addr-fields">
-          <label>
+      <form className="acct-form" onSubmit={save}>
+        <div className="acct-grid">
+          <label className="acct-field">
             First name
             <input
               autoComplete="given-name"
@@ -61,7 +61,7 @@ export default function ProfilePanel({ user, onSaved }) {
               onChange={(e) => set("first_name", e.target.value)}
             />
           </label>
-          <label>
+          <label className="acct-field">
             Last name
             <input
               autoComplete="family-name"
@@ -69,7 +69,7 @@ export default function ProfilePanel({ user, onSaved }) {
               onChange={(e) => set("last_name", e.target.value)}
             />
           </label>
-          <label>
+          <label className="acct-field">
             Phone
             <input
               type="tel"
@@ -79,17 +79,17 @@ export default function ProfilePanel({ user, onSaved }) {
               onChange={(e) => set("phone", e.target.value)}
             />
           </label>
-          <label>
+          <label className="acct-field">
             Email address
             <input type="email" value={user.email} readOnly disabled />
-            <span className="muted field-hint">
+            <span className="acct-hint">
               Your email is how we reach you about orders. Contact us if it needs
               to change.
             </span>
           </label>
         </div>
 
-        <label className="check-row">
+        <label className="acct-check">
           <input
             type="checkbox"
             checked={form.marketing_opt_in}
@@ -101,7 +101,7 @@ export default function ProfilePanel({ user, onSaved }) {
           </span>
         </label>
 
-        <div className="addr-actions">
+        <div className="acct-actions">
           <button className="btn btn-dark" disabled={busy} type="submit">
             {busy ? "Saving…" : "Save details"}
           </button>

@@ -161,7 +161,7 @@ export default function AddressesPanel({ addresses, onChanged }) {
               {a.country}
             </p>
             <p className="muted">{a.phone}</p>
-            <div className="addr-actions">
+            <div className="acct-actions">
               <button className="linkish" onClick={() => startEdit(a)}>Edit</button>
               {!a.is_default && (
                 <button className="linkish" onClick={() => makeDefault(a)}>
@@ -177,12 +177,12 @@ export default function AddressesPanel({ addresses, onChanged }) {
       </div>
 
       {editing && (
-        <form className="addr-form" onSubmit={save}>
+        <form className="acct-form" onSubmit={save}>
           <h3 className="serif">
             {editing === "new" ? "New address" : "Edit address"}
           </h3>
-          <div className="addr-fields">
-            <label>
+          <div className="acct-grid">
+            <label className="acct-field">
               Label
               <select value={form.label} onChange={(e) => set("label", e.target.value)}>
                 <option value="home">Home</option>
@@ -190,7 +190,7 @@ export default function AddressesPanel({ addresses, onChanged }) {
                 <option value="other">Other</option>
               </select>
             </label>
-            <label>
+            <label className="acct-field">
               Full name
               <input
                 required
@@ -198,7 +198,7 @@ export default function AddressesPanel({ addresses, onChanged }) {
                 onChange={(e) => set("full_name", e.target.value)}
               />
             </label>
-            <label>
+            <label className="acct-field">
               Phone
               <input
                 required
@@ -207,7 +207,7 @@ export default function AddressesPanel({ addresses, onChanged }) {
                 onChange={(e) => set("phone", e.target.value)}
               />
             </label>
-            <label className="span-2">
+            <label className="acct-field full">
               Address line 1
               <input
                 required
@@ -215,15 +215,15 @@ export default function AddressesPanel({ addresses, onChanged }) {
                 onChange={(e) => set("line1", e.target.value)}
               />
             </label>
-            <label className="span-2">
+            <label className="acct-field full">
               Address line 2 (optional)
               <input value={form.line2} onChange={(e) => set("line2", e.target.value)} />
             </label>
-            <label>
+            <label className="acct-field">
               City
               <input required value={form.city} onChange={(e) => set("city", e.target.value)} />
             </label>
-            <label>
+            <label className="acct-field">
               State
               <input
                 required
@@ -238,7 +238,7 @@ export default function AddressesPanel({ addresses, onChanged }) {
               <option key={s} value={s} />
             ))}
           </datalist>
-          <div className="addr-actions">
+          <div className="acct-actions">
             <button className="btn btn-dark" disabled={busy} type="submit">
               {busy ? "Saving…" : "Save address"}
             </button>

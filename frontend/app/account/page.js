@@ -106,9 +106,9 @@ function AuthPanel({ onSignedIn }) {
         <h1 className="serif">{title}</h1>
         <p className="muted" style={{ marginBottom: 22 }}>{subtitle}</p>
 
-        <form className="form" onSubmit={submit}>
+        <form className="acct-form" onSubmit={submit}>
           {mode === "register" && (
-            <label className="field">
+            <label className="acct-field">
               <span>Full name</span>
               <input
                 placeholder="Ada Lovelace"
@@ -120,7 +120,7 @@ function AuthPanel({ onSignedIn }) {
             </label>
           )}
 
-          <label className="field">
+          <label className="acct-field">
             <span>Email address</span>
             <input
               type="email"
@@ -133,7 +133,7 @@ function AuthPanel({ onSignedIn }) {
           </label>
 
           {mode !== "forgot" && (
-            <label className="field">
+            <label className="acct-field">
               <span>Password</span>
               <input
                 type="password"

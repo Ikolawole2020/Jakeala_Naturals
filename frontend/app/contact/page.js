@@ -28,13 +28,30 @@ export default function ContactPage() {
       <p className="kicker">Support</p>
       <h1 className="serif" style={{ fontSize: 42 }}>Contact</h1>
       <p className="muted" style={{ margin: "8px 0 20px" }}>info@jakeala.com · Primary domain jakeala.com</p>
-      <form className="form" onSubmit={onSubmit}>
-        <input name="name" required placeholder="Name" />
-        <input name="email" type="email" required placeholder="Email" />
-        <input name="phone" placeholder="Phone" />
-        <input name="subject" placeholder="Subject" />
-        <textarea name="message" required rows={5} placeholder="How can we help?" />
-        <button className="btn btn-dark">Send</button>
+      <form className="form form-2" onSubmit={onSubmit}>
+        <label className="acct-field full">
+          <span>Your name</span>
+          <input name="name" required autoComplete="name" placeholder="Ada Lovelace" />
+        </label>
+        <label className="acct-field">
+          <span>Email</span>
+          <input name="email" type="email" required autoComplete="email" placeholder="you@example.com" />
+        </label>
+        <label className="acct-field">
+          <span>Phone <em className="acct-hint">(optional)</em></span>
+          <input name="phone" type="tel" autoComplete="tel" />
+        </label>
+        <label className="acct-field full">
+          <span>Subject</span>
+          <input name="subject" placeholder="Order, product or delivery question" />
+        </label>
+        <label className="acct-field full">
+          <span>How can we help?</span>
+          <textarea name="message" required rows={5} placeholder="Tell us what you need and we'll reply by email." />
+        </label>
+        <div className="full">
+          <button className="btn btn-dark">Send message</button>
+        </div>
       </form>
       {msg && <p className="alert" style={{ marginTop: 16 }}>{msg}</p>}
     </div>

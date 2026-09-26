@@ -27,12 +27,31 @@ export default function WholesalePage() {
       <p className="kicker">Partners</p>
       <h1 className="serif" style={{ fontSize: 42 }}>Wholesale & retail</h1>
       <p className="muted" style={{ margin: "8px 0 20px" }}>Studios, apothecaries and wellness shelves — write to us with volumes and location.</p>
-      <form className="form" onSubmit={onSubmit}>
-        <input name="name" required placeholder="Business name / buyer" />
-        <input name="email" type="email" required placeholder="Work email" />
-        <input name="phone" placeholder="Phone" />
-        <textarea name="message" required rows={5} placeholder="Store profile, cities, estimated monthly volume" />
-        <button className="btn btn-primary">Request a line sheet</button>
+      <form className="form form-2" onSubmit={onSubmit}>
+        <label className="acct-field full">
+          <span>Business name</span>
+          <input name="name" required autoComplete="organization" placeholder="Studio, apothecary or store" />
+        </label>
+        <label className="acct-field">
+          <span>Work email</span>
+          <input name="email" type="email" required autoComplete="email" placeholder="you@yourstore.com" />
+        </label>
+        <label className="acct-field">
+          <span>Phone <em className="acct-hint">(optional)</em></span>
+          <input name="phone" type="tel" autoComplete="tel" />
+        </label>
+        <label className="acct-field full">
+          <span>Tell us about your business</span>
+          <textarea
+            name="message"
+            required
+            rows={5}
+            placeholder="Cities you deliver to, estimated monthly volume, and which lines you're interested in."
+          />
+        </label>
+        <div className="full">
+          <button className="btn btn-primary">Request a line sheet</button>
+        </div>
       </form>
       {msg && <p className="alert" style={{ marginTop: 16 }}>{msg}</p>}
     </div>

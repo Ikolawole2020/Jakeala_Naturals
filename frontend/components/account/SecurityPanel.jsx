@@ -63,10 +63,10 @@ export default function SecurityPanel({ user }) {
       {error && <p className="alert error">{error}</p>}
       {notice && <p className="alert admin-ok">{notice}</p>}
 
-      <form className="addr-form" onSubmit={save}>
+      <form className="acct-form" onSubmit={save}>
         <h3 className="serif">Change your password</h3>
-        <div className="addr-fields">
-          <label>
+        <div className="acct-grid">
+          <label className="acct-field">
             Current password
             <input
               required
@@ -76,7 +76,7 @@ export default function SecurityPanel({ user }) {
               onChange={(e) => set("current_password", e.target.value)}
             />
           </label>
-          <label>
+          <label className="acct-field">
             New password
             <input
               required
@@ -85,11 +85,11 @@ export default function SecurityPanel({ user }) {
               value={form.new_password}
               onChange={(e) => set("new_password", e.target.value)}
             />
-            <span className="muted field-hint">
+            <span className="acct-hint">
               At least 8 characters, and not your email or username.
             </span>
           </label>
-          <label>
+          <label className="acct-field">
             Confirm new password
             <input
               required
@@ -100,7 +100,7 @@ export default function SecurityPanel({ user }) {
             />
           </label>
         </div>
-        <div className="addr-actions">
+        <div className="acct-actions">
           <button className="btn btn-dark" disabled={busy} type="submit">
             {busy ? "Updating…" : "Update password"}
           </button>
