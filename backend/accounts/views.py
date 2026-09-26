@@ -46,9 +46,9 @@ logger = logging.getLogger(__name__)
 # Returned by password-reset endpoints whether or not the address exists, so the
 # API cannot be used to discover who has an account.
 GENERIC_RESET_SENT = (
-    "If that email address has an account, we've sent a 6-digit code to it."
+    "If that email address has an account, we've sent a password reset link to it."
 )
-GENERIC_CODE_FAILED = "That code is not correct or has expired. Please request a new one."
+GENERIC_CODE_FAILED = "That link is no longer valid or has expired. Please request a new one."
 
 
 def profile_for(user):
@@ -107,7 +107,7 @@ def auth_response(user, token=None):
 @permission_classes([AllowAny])
 @throttle_classes([AuthThrottle, EmailThrottle, EmailIPThrottle])
 def register(request):
-    """Create an unverified account and email a 6-digit code."""
+    """Create an unverified account and email the verification link."""
     ser = RegisterSerializer(data=request.data)
     ser.is_valid(raise_exception=True)
     user = ser.save()
@@ -118,8 +118,8 @@ def register(request):
     return Response(
         {
             "detail": (
-                "We've sent a 6-digit code to your email. "
-                "Enter it below to activate your account."
+                "Check your email - we've sent you a link to verify your "
+                "address. Click it to activate your account."
             ),
             **code_payload(user, code, sent, VerificationCode.SIGNUP),
         },

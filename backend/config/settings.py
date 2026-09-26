@@ -256,6 +256,19 @@ API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
 # Where the front end lives, used in email links (verify / reset password).
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:3000")
 
+# A missing SITE_URL is quiet but destructive: it builds the verification and
+# password-reset links inside emails, and the Paystack callback URL. Left alone it
+# defaults to http://localhost:3000, so every "verify your email" mail points at
+# the developer's own machine and no customer can activate an account, while
+# payment callbacks bounce into a 404. This has bitten twice - once when a .env
+# was replaced wholesale - so it fails loudly at boot instead.
+if not DEBUG and "localhost" in SITE_URL:
+    raise RuntimeError(
+        "SITE_URL still points at localhost, so email verification links and the "
+        "Paystack callback would point at the developer's machine. Set SITE_URL in "
+        "backend/.env to the live storefront, e.g. https://jakeala-naturals.vercel.app"
+    )
+
 # ---------------------------------------------------------------------------
 # Transactional email - Resend (https://resend.com)
 # ---------------------------------------------------------------------------
