@@ -8,6 +8,7 @@ import Overview from "@/components/admin/Overview";
 import Products from "@/components/admin/Products";
 import Categories from "@/components/admin/Categories";
 import Orders from "@/components/admin/Orders";
+import Customers from "@/components/admin/Customers";
 import { Reviews, Articles, Subscribers, Messages } from "@/components/admin/Lists";
 
 const TABS = [
@@ -15,6 +16,7 @@ const TABS = [
   ["products", "Products", Products],
   ["categories", "Categories", Categories],
   ["orders", "Orders", Orders],
+  ["customers", "Customers", Customers],
   ["reviews", "Reviews", Reviews],
   ["articles", "Articles", Articles],
   ["subscribers", "Subscribers", Subscribers],

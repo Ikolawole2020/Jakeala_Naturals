@@ -3,5 +3,5 @@ Name/Host: resend.domainkey
 Value: p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCuR2O+/QIh/lXvaJGtY6YHp65CCKFwBJYC8efD4AHzjvBNBw55gVv/7vr/ehmD7SaXMGj7oH6js79FES3pXvUlHEFwYxvGkCod1kBW1kPtdZY78SthqWeXnSz/o2vNP5JdPvwKaJ1OUprhQTALItSJ7oDZo/fQxQYMShg2Wo738wIDAQAB
 TTL: Auto
 
-Add each record under : GoDaddy → My Products → Domains → jakeala.com → DNS → Add record
-
+Add each record under: GoDaddy -> My Products -> Domains -> jakeala.com -> DNS -> Add record
+GoDaddy offers 12 hours / 1 day / 1 week / custom rather than "Auto". Use 1 day.

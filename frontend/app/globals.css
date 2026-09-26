@@ -342,6 +342,13 @@ h1, h2, h3, .serif {
 .admin-check-row label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-soft); }
 .admin-check { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0; }
 .admin-error { background: #fdecec; color: #8a1f1f; }
+.admin-ok { background: #eaf4ea; color: #2c5c2c; }
+.admin-actions { display: flex; gap: 10px; margin-top: 16px; }
+.admin-actions .btn { margin-top: 0; width: auto; }
+/* Status pills in the Customers table. The default badge is the "off" state, so
+   an unverified or disabled account is visibly muted rather than gold. */
+.badge.on { background: var(--green); color: #fff; }
+.badge:not(.on) { background: #eceee9; color: #6b7a6d; }
 .admin-select { border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 10px; color: var(--ink); }
 
 .admin-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }

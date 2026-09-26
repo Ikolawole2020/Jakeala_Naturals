@@ -139,3 +139,9 @@ export const adminDeleteSubscriber = (id) => adminApi(`/subscribers/${id}/`, { m
 // Messages
 export const adminMessages = () => adminApi("/messages/");
 export const adminDeleteMessage = (id) => adminApi(`/messages/${id}/`, { method: "DELETE" });
+
+// Customers (accounts registered through /account)
+export const adminCustomers = (qs = "?page_size=200") => adminApi(`/customers/${qs}`);
+export const adminUpdateCustomer = (id, d) =>
+  adminApi(`/customers/${id}/`, { method: "PATCH", body: JSON.stringify(d) });
+export const adminDeleteCustomer = (id) => adminApi(`/customers/${id}/`, { method: "DELETE" });

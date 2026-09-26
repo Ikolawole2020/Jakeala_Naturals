@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -16,6 +17,7 @@ from .serializers import (
     AdminArticleSerializer,
     AdminCategorySerializer,
     AdminContactSerializer,
+    CustomerAdminSerializer,
     OrderAdminSerializer,
     ProductAdminSerializer,
     ReviewAdminSerializer,
@@ -74,6 +76,7 @@ def admin_stats(request):
             "subscribers": NewsletterSubscriber.objects.count(),
             "messages": ContactMessage.objects.count(),
             "articles": Article.objects.count(),
+            "customers": User.objects.filter(is_staff=False).count(),
         }
     )
 
@@ -131,3 +134,51 @@ class ContactMessageAdminViewSet(_IsStaffModelViewSet):
     serializer_class = AdminContactSerializer
     filterset_fields = ("kind",)
     ordering = ("-id",)
+
+
+class CustomerAdminViewSet(_IsStaffModelViewSet):
+    """List, edit and delete customer accounts.
+
+    Two safeguards, both deliberate:
+
+    * **Staff cannot be deleted through here.** If a superuser removed themselves
+      (or the only other admin) by accident, the dashboard would lock everyone out
+      with no way back in short of the Django shell. The last remaining superuser
+      is protected outright.
+    * **Django's own ``/admin/`` remains the escape hatch** for the rare case a
+      lockout is genuinely wanted - it has its own confirmation flow.
+    """
+
+    queryset = User.objects.all()
+    serializer_class = CustomerAdminSerializer
+    search_fields = ("username", "email", "first_name", "last_name")
+    filterset_fields = ("is_active", "is_staff")
+    ordering = ("-date_joined",)
+
+    def _protected(self, user):
+        """A superuser must not be removed, and never the last one."""
+        if not user.is_superuser:
+            return False
+        return User.objects.filter(is_superuser=True).count() <= 1
+
+    def perform_destroy(self, instance):
+        if self._protected(instance):
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied(
+                "This is the last superuser. Promote another staff member first, "
+                "or delete the account from Django's own admin at /admin/."
+            )
+        # Cascade: profile, verification codes and any auth tokens.
+        instance.delete()
+
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        if self._protected(instance) and not serializer.validated_data.get("is_staff", True):
+            from rest_framework.exceptions import PermissionDenied
+
+            raise PermissionDenied(
+                "This is the last superuser, so it cannot be demoted. "
+                "Promote another staff member first."
+            )
+        serializer.save()

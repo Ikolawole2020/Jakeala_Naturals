@@ -5,6 +5,7 @@ from .views import (
     ArticleAdminViewSet,
     CategoryAdminViewSet,
     ContactMessageAdminViewSet,
+    CustomerAdminViewSet,
     OrderAdminViewSet,
     ProductAdminViewSet,
     ReviewAdminViewSet,
@@ -23,6 +24,7 @@ router.register("reviews", ReviewAdminViewSet, basename="adm-review")
 router.register("articles", ArticleAdminViewSet, basename="adm-article")
 router.register("subscribers", SubscriberAdminViewSet, basename="adm-subscriber")
 router.register("messages", ContactMessageAdminViewSet, basename="adm-message")
+router.register("customers", CustomerAdminViewSet, basename="adm-customer")
 
 urlpatterns = [
     path("login/", admin_login, name="admin-login"),
