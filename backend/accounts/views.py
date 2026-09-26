@@ -10,7 +10,7 @@ Three rules hold throughout this module:
   ``config/throttles.py``. Codes are stored hashed, single-use and expiring.
 
 The generated code is echoed back in the response **only** in DEBUG and only when
-EmailJS is unconfigured, so sign-up can be tested locally before the mail service
+Resend is unconfigured, so sign-up can be tested locally before the mail service
 is wired up. Production never returns it.
 """
 

@@ -43,7 +43,7 @@ class RegistrationTests(TestCase):
         self.assertFalse(user.profile.email_verified)
         self.assertTrue(VerificationCode.objects.filter(user=user).exists())
 
-        # No EmailJS keys locally, so the code comes back for testing (DEBUG only).
+        # No Resend key locally, so the code comes back for testing (DEBUG only).
         self.assertRegex(response.data["debug_code"], r"^\d{6}$")
         self.assertFalse(response.data["email_sent"])
 

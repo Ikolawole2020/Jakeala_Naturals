@@ -21,7 +21,7 @@ class AuthThrottle(ScopedRateThrottle):
 
 
 class EmailThrottle(ScopedRateThrottle):
-    """Per-address cap on outbound EmailJS messages.
+    """Per-address cap on outbound email.
 
     Keyed by the submitted email so one victim's inbox cannot be flooded, and
     paired with ``EmailIPThrottle`` so one caller cannot spray many addresses.
@@ -39,7 +39,7 @@ class EmailThrottle(ScopedRateThrottle):
 
 
 class EmailIPThrottle(ScopedRateThrottle):
-    """Per-caller cap on outbound EmailJS messages."""
+    """Per-caller cap on outbound email."""
 
     scope = "email_ip"
 

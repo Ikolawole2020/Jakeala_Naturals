@@ -211,8 +211,8 @@ REST_FRAMEWORK = {
         "user": "1000/hour",
         # Credential endpoints: login, register, verification attempts.
         "auth": "12/min",
-        # Outbound EmailJS messages. Free plan allows 200/month, so this is both
-        # an abuse guard and a bill guard. Keyed per address and per caller.
+        # Outbound email. Resend's free plan allows 100 emails/month, so this is
+        # both an abuse guard and a bill guard. Keyed per address and per caller.
         "email": "4/hour",
         "email_ip": "10/hour",
         "checkout": "30/hour",
@@ -243,9 +243,7 @@ if "test" in sys.argv:
         }
     }
     # Keep the suite fast even if email is configured on the developer's machine.
-    EMAILJS_SERVICE_ID = ""
-    EMAILJS_PUBLIC_KEY = ""
-    EMAILJS_PRIVATE_KEY = ""
+    RESEND_API_KEY = ""
 
 
 
@@ -259,25 +257,23 @@ API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:3000")
 
 # ---------------------------------------------------------------------------
-# Transactional email - EmailJS (https://emailjs.com)
+# Transactional email - Resend (https://resend.com)
 # ---------------------------------------------------------------------------
-# PythonAnywhere's free plan blocks outbound SMTP, so mail is sent over HTTP.
-# Create a service + template, then paste the four values below into backend/.env.
-# EMAILJS_PRIVATE_KEY authorises *server-side* sends - it must never reach the
-# browser (that is why the codes are generated here, not in the front end).
-EMAILJS_SERVICE_ID = os.environ.get("EMAILJS_SERVICE_ID", "")
-EMAILJS_PUBLIC_KEY = os.environ.get("EMAILJS_PUBLIC_KEY", "")
-EMAILJS_PRIVATE_KEY = os.environ.get("EMAILJS_PRIVATE_KEY", "")
-EMAILJS_TEMPLATE_VERIFY = os.environ.get("EMAILJS_TEMPLATE_VERIFY", "")
-EMAILJS_TEMPLATE_RESET = os.environ.get("EMAILJS_TEMPLATE_RESET", "")
-EMAILJS_TEMPLATE_ORDER = os.environ.get("EMAILJS_TEMPLATE_ORDER", "")
-EMAILJS_TIMEOUT = int(os.environ.get("EMAILJS_TIMEOUT", "12"))
+# PythonAnywhere's free plan blocks outbound SMTP, so mail is sent over the
+# Resend HTTPS API (api.resend.com is on their free-tier allowlist).
+# RESEND_API_KEY authorises *server-side* sends - it must never reach the
+# browser (that is why the verification codes are generated here, in Django).
+#
+# The sender must be a domain verified in the Resend dashboard (jakeala.com),
+# so customers never see a @gmail.com "from" address.
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "Jakeala Naturals <info@jakeala.com>")
+RESEND_REPLY_TO = os.environ.get("RESEND_REPLY_TO", "info@jakeala.com")
+RESEND_TIMEOUT = int(os.environ.get("RESEND_TIMEOUT", "12"))
 
-# With no keys configured we log the code to the console instead of sending it,
-# so registration can be tested locally before EmailJS is wired up.
-EMAIL_ENABLED = bool(
-    EMAILJS_SERVICE_ID and EMAILJS_PUBLIC_KEY and EMAILJS_PRIVATE_KEY and EMAILJS_TEMPLATE_VERIFY
-)
+# With no API key configured we log the message instead of sending it, so
+# registration can be tested locally before Resend is set up.
+EMAIL_ENABLED = bool(RESEND_API_KEY)
 
 # How long a 6-digit verification code stays valid, and how many wrong guesses
 # before it is burned. Guessing is also rate-limited.
