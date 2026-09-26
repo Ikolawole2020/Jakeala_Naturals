@@ -30,10 +30,22 @@ export function sessionKey() {
 }
 
 export async function api(path, options = {}) {
-  const res = await fetch(`${API}${path}`, {
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    ...options,
-  });
+  const { headers: extraHeaders, ...rest } = options;
+
+  // The spread order matters. `...options` used to come after `headers`, so any
+  // caller that supplied its own headers object (every authenticated request does,
+  // to attach the token) silently replaced the whole object and dropped
+  // Content-Type. JSON bodies then went out untyped and Django answered 415
+  // Unsupported Media Type, so saving an address, the profile or a password
+  // failed in the browser while the same call worked from curl.
+  const headers = { ...(extraHeaders || {}) };
+  // Only declare a body type when there is actually a body. Sending
+  // Content-Type on a bodyless GET makes some servers reject the request.
+  if (rest.body !== undefined && rest.body !== null && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const res = await fetch(`${API}${path}`, { ...rest, headers });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || res.statusText);
