@@ -257,12 +257,6 @@ h1, h2, h3, .serif {
   .grid-4, .promise, .trust, .footer-grid, .newsletter, .pdp, .grid-3 { grid-template-columns: 1fr 1fr; }
   .nav-links { display: none; }
   .search { display: none; }
-  .menu-btn { display: grid; }
-  .mobile-nav {
-    display: flex; flex-direction: column;
-    padding: 10px 24px 20px; background: var(--green-leaf);
-    border-top: 1px solid var(--line);
-  }
 }
 @media (max-width: 680px) {
   .grid-4, .promise, .trust, .footer-grid, .newsletter, .pdp, .grid-3, .grid-2 { grid-template-columns: 1fr; }
@@ -328,6 +322,32 @@ h1, h2, h3, .serif {
 }
 .mobile-nav-link:hover { color: var(--green); }
 .mobile-cta { margin-top: 18px; width: 100%; }
+
+/* Small-screen navigation.
+   These must come *after* the .menu-btn / .mobile-nav base rules above. Both are
+   a single class selector, so a media query placed earlier loses to them on
+   source order - which is exactly what happened: .menu-btn { display: none } sat
+   below .menu-btn { display: grid } and won, leaving a phone with the desktop nav
+   hidden, the hamburger hidden and the drawer hidden. No navigation at all. */
+@media (max-width: 960px) {
+  .menu-btn { display: grid; }
+  .mobile-nav {
+    display: flex; flex-direction: column;
+    padding: 10px 24px 22px; background: var(--green-leaf);
+    border-top: 1px solid var(--line);
+  }
+}
+/* On the narrowest phones the row runs out of room: the wordmark, the search
+   pill, two icons and the hamburger cannot share 360px. The search is already
+   hidden by this point, so the remaining squeeze is the brand block. */
+@media (max-width: 420px) {
+  .brand img { width: 38px; height: 38px; }
+  .brand-text strong { font-size: 16px; }
+  .nav { gap: 8px; padding: 10px 0; }
+  .nav-actions { gap: 6px; }
+  .icon-btn, .menu-btn { width: 38px; height: 38px; }
+  .announcement { font-size: 12px; padding: 7px 12px; }
+}
 
 /* ---------- Admin / staff dashboard ---------- */
 .admin-login { margin: 40px 0; }
