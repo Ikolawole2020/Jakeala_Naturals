@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { getCart, sessionKey } from "@/lib/api";
 import CartDrawer from "./CartDrawer";
 
@@ -41,7 +41,6 @@ export default function Header() {
   const [count, setCount] = useState(0);
   const [q, setQ] = useState("");
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     getCart(sessionKey())
@@ -54,12 +53,6 @@ export default function Header() {
     window.addEventListener("cart:update", onUp);
     return () => window.removeEventListener("cart:update", onUp);
   }, []);
-
-  // Close on navigation, so following a link from inside the menu does not leave
-  // the drawer hanging open over the page that was just loaded.
-  useEffect(() => {
-    setMenu(false);
-  }, [pathname]);
 
   // Escape closes the menu, and the page behind it stops scrolling while it is
   // open - otherwise a long menu scrolls the page out from under the reader.
@@ -101,7 +94,6 @@ export default function Header() {
               onSubmit={(e) => {
                 e.preventDefault();
                 router.push(`/shop?q=${encodeURIComponent(q)}`);
-                setMenu(false);
               }}
             >
               <input
