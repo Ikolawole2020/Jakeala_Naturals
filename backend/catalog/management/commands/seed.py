@@ -85,11 +85,10 @@ PRODUCTS = [
         slug="breast-massage-butter",
         short_benefit="Warm, nourishing butter for breast massage rituals.",
         description=(
-            "A rich botanical butter crafted for gentle breast and chest massage. "
-            "Melts on contact and glides smoothly, supporting a calm, regular "
-            "self-care ritual rooted in lymphatic care traditions." 
+            "Our breast balm is infused with lymphatic herbs to encourage detoxification "
+            "and support the boobs."
         ),
-        price="9500.00",
+        price="30000.00",
         size="100 g",
         sku="JN-BMB-01",
         image=f"{IMAGES}/breast-massage-butter.jpg",
@@ -100,7 +99,7 @@ PRODUCTS = [
             f"{IMAGES}/breast-massage-butter-4.jpg",
         ],
         benefits=[
-            "Melts on contact for smooth massage glide",
+            "Soothes breast tenderness and great for after lumpectomy/radiation/surgery",
             "Nourishing butters that absorb without heaviness",
             "Supports a calm, regular self-massage ritual",
         ],
@@ -128,22 +127,22 @@ PRODUCTS = [
             "pH-aware and fragrance-free, it cleanses without dryness and leaves "
             "skin feeling soft and comfortable." 
         ),
-        price="7800.00",
-        size="100 ml",
+        price="17000.00",
+        size="59 ml",
         sku="JN-YCO-01",
         image=f"{IMAGES}/yoni-cleansing-oil.jpg",
         gallery=[f"{IMAGES}/yoni-cleansing-oil.jpg"],
         benefits=[
             "Gentle daily cleansing without dryness",
-            "Fragrance-free, pH-aware formula",
-            "Light botanical oils that rinse clean",
+            "Discourages odor down there",
+            'Great way to cleanse after "intimacy" and "aunt flo time"',
         ],
         ingredients=(
             "Sunflower Seed Oil, Jojoba Oil, Aloe Extract, Tea Tree Leaf Oil, Vitamin E."
         ),
         directions=(
-            "Apply a small amount to damp external skin, massage gently and rinse well. "
-            "External use only."
+            "Apply a couple drops on the tissue or vulva area and wipe. "
+            "Great for use after waxing."
         ),
         who_it_is_for="Women seeking a gentle daily feminine wash alternative.",
         warnings="External use only. Avoid internal use. Discontinue if irritation occurs.",
@@ -158,31 +157,31 @@ PRODUCTS = [
         slug="cycle-reset-tea",
         short_benefit="A botanical tea for a more intentional monthly ritual.",
         description=(
-            "Cycle Reset Tea is a thoughtfully crafted botanical blend featuring organic cinnamon "
-            "bark, organic slippery elm and organic lady's mantle, with chaste tree berry extract.\n\n"
-            "Inspired by traditional herbal wellness practices, this blend is created for women who "
-            "want to make mindful self-care part of their monthly routine. Enjoy a warm cup as part "
-            "of your personal wellness ritual before and during your cycle."
+            "Experiencing extremely short cycles? Short Luteal Phase? "
+            "Then this is the tea for you!"
         ),
-        price="8500.00",
+        price="12700.00",
         size="1 tea bag · makes 12 fl oz",
         sku="JN-CRT-01",
         image=f"{IMAGES}/cycle-reset-tea.jpg",
         gallery=[f"{IMAGES}/cycle-reset-tea.jpg"],
         benefits=[
-            "Traditional botanicals for monthly comfort",
+            "Lengthens short menstrual cycle",
             "Caffeine-free and gentle on the stomach",
-            "A grounding ritual, morning or evening",
+            "Traditional botanicals to support healthy cycles",
         ],
         ingredients=(
             "Organic Cinnamon Bark, Organic Slippery Elm, Organic Lady's Mantle, "
             "Chaste Tree Berry Extract."
         ),
         directions=(
-            "Steep 1 tea bag in 12 fl oz of freshly boiled water for 5-7 minutes. Enjoy warm, "
-            "before and during your cycle."
+            "Mix 1 tablespoon with hot water and drink daily. "
+            "You can also add 1 tablespoon daily to smoothies."
         ),
-        who_it_is_for="Women who want a warm, traditional herbal ritual around their monthly cycle.",
+        who_it_is_for=(
+            "Experiencing extremely short cycles? Short Luteal Phase? "
+            "Then this is the tea for you!"
+        ),
         warnings=(
             "Not intended during pregnancy or breastfeeding without advice from your healthcare "
             "provider. If you take medication or have a medical condition, speak to your doctor "
@@ -208,22 +207,18 @@ PRODUCTS = [
         slug="lenu-harmony-herbal-tea",
         short_benefit="Eleven botanicals blended for a soothing everyday ritual.",
         description=(
-            "Lenu Harmony Herbal Tea is a vibrant botanical blend bringing together a wide selection "
-            "of traditional herbs, including burdock root, ginger root, cinnamon bark, turmeric "
-            "root, lemon balm, calendula and strawberry extract.\n\n"
-            "With its rich variety of botanicals, Lenu Harmony is designed for women who enjoy "
-            "incorporating herbal tea into their everyday self-care. It is a beautiful addition to a "
-            "morning wellness ritual, an afternoon tea break or a relaxing evening routine."
+            "Our herbal formula tones the uterus, discourages fibroids, endometriosis, "
+            "calms PMS irritability and supports fertility."
         ),
-        price="9500.00",
+        price="15700.00",
         size="1 tea bag · makes 8 fl oz",
         sku="JN-LHT-01",
         image=f"{IMAGES}/lenu-harmony-herbal-tea.jpg",
         gallery=[f"{IMAGES}/lenu-harmony-herbal-tea.jpg"],
         benefits=[
-            "Eleven herbs and botanical extracts in one blend",
-            "Ginger, turmeric and cinnamon warm the palate",
-            "Caffeine-free and suited to daily drinking",
+            "Eleven herbs and botanical extracts for women",
+            "Warming hormonal balance tea for women",
+            "Natural menstrual health support",
         ],
         ingredients=(
             "Organic Burdock Root, Organic Ginger Root, Organic Cinnamon Bark, Organic Turmeric "
@@ -254,27 +249,21 @@ PRODUCTS = [
     ),
     dict(
         category_slug="womens-wellness",
-        name="Teen Comfort Flow",
+        name="Teen Comfort Flow Tea",
         slug="teen-comfort-flow",
         short_benefit="Cool, calm and in control during your cycle.",
         description=(
-            "Teen Comfort Flow was formulated for teenagers navigating cycle discomfort, bringing "
-            "together traditional botanicals in an approachable herbal tea ritual.\n\n"
-            "The blend features organic burdock root, ginger root and cinnamon bark, with soothing "
-            "lemon balm, to comfort PMS cramps, bloating and mood swings.\n\n"
-            "With its botanical ingredients and comforting tea ritual, Teen Comfort Flow can become "
-            "part of a teen's personal self-care routine during her monthly cycle. It is a simple way "
-            "to encourage healthy conversations around wellness, self-care and understanding your "
-            "body."
+            "Gentle yet effective, our herbal tea provides targeted uterine support "
+            "so teenagers can stay cool and calm during their cycle."
         ),
-        price="7500.00",
+        price="13700.00",
         size="1 tea bag · makes 8 fl oz",
         sku="JN-TCF-01",
         image=f"{IMAGES}/teen-comfort-flow.jpg",
         gallery=[f"{IMAGES}/teen-comfort-flow.jpg"],
         benefits=[
             "Formulated for teenage cycle discomfort",
-            "Ginger and cinnamon in a gentle, approachable blend",
+            "Ginger and cinnamon along with other herbs to naturally ease pms pain",
             "Opens the door to healthy conversations about self-care",
         ],
         ingredients=(
@@ -312,13 +301,10 @@ PRODUCTS = [
         slug="ease-flow-menorrhagia-tea",
         short_benefit="A supportive blend for heavy menstrual flow.",
         description=(
-            "Ease Flow is a thoughtfully crafted herbal blend designed for women who want to take "
-            "control of a heavy menstrual flow, helping to moderate excessive bleeding.\n\n"
-            "Its carefully selected ingredients make Ease Flow a natural addition to a warm, "
-            "comforting tea ritual. Enjoy a cup as part of your intentional approach to everyday "
-            "women's wellness."
+            "A supportive blend for heavy menstrual flow and extremely heavy flow "
+            "during the month."
         ),
-        price="9000.00",
+        price="13700.00",
         size="1 tea bag · makes 8 fl oz",
         sku="JN-EFL-01",
         image=f"{IMAGES}/ease-flow.jpg",

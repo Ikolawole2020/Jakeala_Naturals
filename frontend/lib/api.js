@@ -133,12 +133,12 @@ export const FALLBACK_CATEGORIES = [
 ];
 
 export const FALLBACK_PRODUCTS = [
-  { slug: "breast-massage-butter", name: "Breast Massage Butter", short_benefit: "Warm, nourishing butter for breast massage rituals.", price: "9500.00", image: "/media/products/breast-massage-butter.jpg", rating: "4.90", review_count: 12, category_slug: "feminine-care", is_featured: true },
-  { slug: "cycle-reset-tea", name: "Cycle Reset Tea", short_benefit: "A botanical tea for a more intentional monthly ritual.", price: "8500.00", image: "/media/products/cycle-reset-tea.jpg", rating: "4.90", review_count: 132, category_slug: "womens-wellness", is_featured: true },
-  { slug: "lenu-harmony-herbal-tea", name: "Lenu Harmony Herbal Tea", short_benefit: "Gentle harmony for bloating, mood and pampering.", price: "9000.00", image: "/media/products/lenu-harmony-herbal-tea.jpg", rating: "4.85", review_count: 64, category_slug: "womens-wellness", is_featured: true },
-  { slug: "teen-comfort-flow", name: "Teen Comfort Flow", short_benefit: "Cool, calm and in control during your cycle.", price: "7500.00", image: "/media/products/teen-comfort-flow.jpg", rating: "4.80", review_count: 45, category_slug: "womens-wellness", is_featured: true },
-  { slug: "ease-flow-menorrhagia-tea", name: "Ease Flow Menorrhagia Tea", short_benefit: "A supportive blend for heavy menstrual flow.", price: "9000.00", image: "/media/products/ease-flow.jpg", rating: "4.82", review_count: 38, category_slug: "womens-wellness", is_featured: true },
-  { slug: "yoni-cleansing-oil", name: "Yoni Cleansing Oil", short_benefit: "A gentle botanical oil for daily feminine freshness.", price: "7800.00", image: "/media/products/yoni-cleansing-oil.jpg", rating: "4.85", review_count: 18, category_slug: "feminine-care", is_featured: true },
+  { slug: "breast-massage-butter", name: "Breast Massage Butter", short_benefit: "Warm, nourishing butter for breast massage rituals.", price: "30000.00", image: "/media/products/breast-massage-butter.jpg", rating: "4.90", review_count: 12, category_slug: "feminine-care", is_featured: true },
+  { slug: "cycle-reset-tea", name: "Cycle Reset Tea", short_benefit: "For short cycles and a short luteal phase.", price: "12700.00", image: "/media/products/cycle-reset-tea.jpg", rating: "4.90", review_count: 132, category_slug: "womens-wellness", is_featured: true },
+  { slug: "lenu-harmony-herbal-tea", name: "Lenu Harmony Herbal Tea", short_benefit: "Eleven herbs for hormonal balance and fertility.", price: "15700.00", image: "/media/products/lenu-harmony-herbal-tea.jpg", rating: "4.85", review_count: 64, category_slug: "womens-wellness", is_featured: true },
+  { slug: "teen-comfort-flow", name: "Teen Comfort Flow Tea", short_benefit: "Cool, calm and in control during your cycle.", price: "13700.00", image: "/media/products/teen-comfort-flow.jpg", rating: "4.80", review_count: 45, category_slug: "womens-wellness", is_featured: true },
+  { slug: "ease-flow-menorrhagia-tea", name: "Ease Flow Menorrhagia Tea", short_benefit: "A supportive blend for heavy menstrual flow.", price: "13700.00", image: "/media/products/ease-flow.jpg", rating: "4.82", review_count: 38, category_slug: "womens-wellness", is_featured: true },
+  { slug: "yoni-cleansing-oil", name: "Yoni Cleansing Oil", short_benefit: "A gentle botanical oil for daily feminine freshness.", price: "17000.00", image: "/media/products/yoni-cleansing-oil.jpg", rating: "4.85", review_count: 18, category_slug: "feminine-care", is_featured: true },
 ];
 
 export function naira(value) {
