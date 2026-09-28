@@ -45,7 +45,27 @@ export async function api(path, options = {}) {
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(`${API}${path}`, { ...rest, headers });
+  // Catalogue data must never be served from a build-time snapshot.
+  //
+  // Next.js caches fetch() in Server Components by default. The shop and product
+  // pages fetch the catalogue on the server, so the prices were captured once
+  // during the Vercel build and frozen: changing a price in the admin dashboard
+  // updated the API immediately but the storefront carried on showing the old
+  // figure until somebody happened to redeploy.
+  //
+  // 60 seconds is the compromise. `no-store` would be correct but every visitor
+  // would then hit Django directly, and PythonAnywhere's free tier allows only
+  // 100 requests a day - the store would be offline by mid-morning. A one-minute
+  // window means a price change is live within a minute, and Django sees roughly
+  // one request per catalogue query per minute instead of one per visitor.
+  //
+  // Authenticated calls carry an Authorization header, which Next never caches,
+  // so this does not affect the account, cart or admin pages.
+  const res = await fetch(`${API}${path}`, {
+    next: { revalidate: 60 },
+    ...rest,
+    headers,
+  });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || res.statusText);
