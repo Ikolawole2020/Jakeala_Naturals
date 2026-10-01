@@ -68,8 +68,26 @@ def _request(method, path, payload=None):
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:400]
         logger.error("Paystack %s %s failed: HTTP %s %s", method, path, exc.code, detail)
+
+        # Surface Paystack's own wording. The generic "rejected that request"
+        # message hid the one thing that actually fixes the problem - Paystack
+        # names the fault precisely ("Invalid callback url", "Invalid key", "Amount
+        # must be an integer") and that text is what points at the fix.
+        reason = detail
+        try:
+            parsed = json.loads(detail)
+            reason = (
+                parsed.get("message")
+                or (parsed.get("data") or {}).get("message")
+                or detail
+            )
+        except (ValueError, AttributeError):
+            pass
+
         raise PaystackError(
-            "Paystack rejected that request. Please try again.", status_code=exc.code
+            f"Paystack could not start the payment: {reason}" if "initialize" in path
+            else f"Paystack could not complete the request: {reason}",
+            status_code=exc.code,
         ) from exc
     except Exception as exc:  # network, DNS, timeout, bad JSON
         logger.error("Paystack %s %s failed: %s", method, path, exc)
