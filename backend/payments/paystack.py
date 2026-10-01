@@ -58,6 +58,15 @@ def _request(method, path, payload=None):
             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
             "Content-Type": "application/json",
             "Accept": "application/json",
+            # Required, not cosmetic. Paystack sits behind Cloudflare, which
+            # rejects requests whose User-Agent it cannot identify as a real
+            # client - it answers 403 "browser_signature_banned" (error 1010) and
+            # never reaches the API. urllib's default is a bare
+            # "Python-urllib/3.x", which is exactly what trips that rule, so every
+            # live charge failed from PythonAnywhere with "Paystack could not
+            # start the payment". Identifying the application is sufficient; a
+            # browser spoof is not needed. Same fix as the Resend transport.
+            "User-Agent": "JakealaNaturals/1.0 (+https://jakeala.com)",
         },
     )
 

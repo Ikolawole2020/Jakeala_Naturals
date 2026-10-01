@@ -20,6 +20,60 @@ TEST_SECRET = "sk_test_pretend_key"
 TEST_PUBLIC = "pk_test_pretend_key"
 
 
+class PaystackTransportTests(TestCase):
+    """The HTTP transport itself.
+
+    Paystack is fronted by Cloudflare, which rejects a request whose User-Agent it
+    cannot identify: it answers 403 "browser_signature_banned" (error 1010) and
+    the API is never reached. urllib sends a bare "Python-urllib/3.x", so every
+    live charge from PythonAnywhere failed until the transport identified itself.
+
+    The same rule applies to the Resend mailer. Both fixes are pinned here so a
+    later refactor cannot quietly drop the header and only notice in production.
+    """
+
+    def _captured_request(self, func, *args, **kwargs):
+        with override_settings(PAYSTACK_SECRET_KEY=TEST_SECRET):
+            with patch("payments.paystack.urllib.request.urlopen") as fake:
+                fake.return_value.__enter__.return_value.status = 200
+                fake.return_value.__enter__.return_value.read.return_value = json.dumps(
+                    {"status": True, "data": {"reference": "REF", "authorization_url": "https://x", "access_code": "a"}}
+                ).encode()
+                func(*args, **kwargs)
+                return fake.call_args[0][0]
+
+    def test_paystack_requests_identify_the_application(self):
+        from payments import paystack
+
+        request = self._captured_request(
+            paystack.initialize_transaction,
+            email="a@b.com",
+            amount=Decimal("1000"),
+            reference="REF1",
+            callback_url="https://jakeala.com/payment/verify",
+        )
+        agent = request.headers.get("User-agent") or request.get_header("User-agent")
+        self.assertTrue(agent, "Paystack requests must carry a User-Agent")
+        self.assertIn("JakealaNaturals", agent)
+
+    def test_resend_requests_identify_the_application(self):
+        from accounts import services
+
+        with override_settings(RESEND_API_KEY="re_test_key", RESEND_FROM_EMAIL="a@b.com"):
+            with patch("accounts.services.urllib.request.urlopen") as fake:
+                fake.return_value.__enter__.return_value.status = 200
+                fake.return_value.__enter__.return_value.read.return_value = b'{"id":"1"}'
+                services.send_email(
+                    to_email="c@d.com",
+                    subject="s",
+                    html="<p>x</p>",
+                )
+                request = fake.call_args[0][0]
+        agent = request.headers.get("User-agent") or request.get_header("User-agent")
+        self.assertTrue(agent, "Resend requests must carry a User-Agent")
+        self.assertIn("JakealaNaturals", agent)
+
+
 class PaymentsBase(TestCase):
     """A pending order worth NGN 17,000 with two units of tracked stock."""
 
