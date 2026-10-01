@@ -172,3 +172,16 @@ export function results(payload) {
   if (Array.isArray(payload.results)) return payload.results;
   return [];
 }
+
+// --------------------------------------------------------------------------- //
+// Payments                                                                    //
+// --------------------------------------------------------------------------- //
+// The Paystack public key is read from the API at runtime rather than baked into
+// the build as a NEXT_PUBLIC_* variable. That keeps it out of Vercel's
+// environment, makes the backend the single source of truth, and means rotating
+// the key later never needs a redeploy.
+export const paymentsConfig = () => api("/payments/config/");
+export const initializePayment = (body) =>
+  api("/payments/initialize/", { method: "POST", body: JSON.stringify(body) });
+export const verifyPayment = (body) =>
+  api("/payments/verify/", { method: "POST", body: JSON.stringify(body) });

@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { checkout, getCart, naira, sessionKey } from "@/lib/api";
+import {
+  checkout,
+  getCart,
+  initializePayment,
+  naira,
+  paymentsConfig,
+  sessionKey,
+} from "@/lib/api";
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState({ items: [], subtotal: 0 });
@@ -16,9 +23,15 @@ export default function CheckoutPage() {
     country: "Nigeria",
     notes: "",
   });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
     getCart(sessionKey()).then(setCart).catch(() => {});
+    paymentsConfig()
+      .then((c) => setLive(Boolean(c && c.enabled && c.public_key)))
+      .catch(() => setLive(false));
   }, []);
 
   function set(k, v) {
@@ -27,12 +40,34 @@ export default function CheckoutPage() {
 
   async function submit(e) {
     e.preventDefault();
+    setBusy(true);
+    setError("");
     try {
-      const order = await checkout({ ...form, session_key: sessionKey() });
+      // /checkout/ answers { order, payment_required }. Reading order.id straight
+      // off that envelope gave an undefined reference and a N0 total on the
+      // confirmation - the order was created correctly, only the receipt was broken.
+      const result = await checkout({ ...form, session_key: sessionKey() });
+      const order = result.order || result;
+
+      if (!result.payment_required) {
+        // No gateway reachable: pay on fulfilment. The basket is already empty.
+        window.dispatchEvent(new Event("cart:update"));
+        setDone({ ...order, email: order.email || form.email });
+        return;
+      }
+
+      // Open Paystack. The public key is read from the API rather than baked into
+      // the build, so rotating it later never needs a redeploy.
+      const pay = await initializePayment({
+        order_id: order.id,
+        token: order.public_token,
+      });
       window.dispatchEvent(new Event("cart:update"));
-      setDone(order);
-    } catch {
-      setDone({ id: "DEMO", total: cart.subtotal, email: form.email });
+      window.location.assign(pay.authorization_url);
+    } catch (err) {
+      setError(readError(err) || "We could not start the payment. Please try again.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -41,8 +76,13 @@ export default function CheckoutPage() {
       <div className="wrap page-hero" style={{ maxWidth: 640 }}>
         <p className="kicker">Thank you</p>
         <h1 className="serif" style={{ fontSize: 40 }}>Order received</h1>
-        <p className="muted">Reference #{done.id}. A confirmation will go to {done.email}.</p>
+        <p className="muted">
+          Reference #{done.id}. A confirmation will go to {done.email}.
+        </p>
         <p style={{ marginTop: 12 }}>Total {naira(done.total)}</p>
+        <p className="muted" style={{ marginTop: 18 }}>
+          We have emailed your receipt. We will be in touch about delivery.
+        </p>
       </div>
     );
   }
@@ -82,7 +122,19 @@ export default function CheckoutPage() {
             <textarea rows={3} placeholder="Landmark, delivery window, anything else we should know" value={form.notes} onChange={(e) => set("notes", e.target.value)} />
           </label>
           <div className="full">
-            <button className="btn btn-primary" type="submit">Place order · Pay on fulfilment demo</button>
+            {error && <p className="alert error" role="alert">{error}</p>}
+            <button className="btn btn-primary" type="submit" disabled={busy}>
+              {busy
+                ? "Opening secure payment…"
+                : live
+                ? "Pay securely with card"
+                : "Place order · Pay on fulfilment"}
+            </button>
+            <p className="muted" style={{ marginTop: 10, fontSize: 13 }}>
+              {live
+                ? "You will be taken to Paystack to pay by card, bank transfer or USSD."
+                : "Card payments are not switched on yet, so this places the order for pay-on-fulfilment."}
+            </p>
           </div>
         </form>
       </div>
@@ -98,4 +150,15 @@ export default function CheckoutPage() {
       </aside>
     </div>
   );
+}
+
+function readError(err) {
+  try {
+    const body = JSON.parse(err.message);
+    if (typeof body === "string") return body;
+    if (body.detail) return body.detail;
+    return Object.values(body).flat().join(" ");
+  } catch {
+    return "";
+  }
 }
